@@ -14,10 +14,15 @@ Note: Gate scripts that use uasyncio.run() will drive their own event loop.
 
 import uasyncio
 
-# List of gate scripts to run in order.
-# Additional gates are appended in later plans as they are created.
+# All gates in execution order.
+# Ordered by dependency: async skeleton → motors → turns → sensors → safety → encoders
 GATES = [
     "gates/gate1_async_skeleton.py",
+    "gates/gate2_motor_distance.py",
+    "gates/gate3_turn_angle.py",
+    "gates/gate4_sensors.py",
+    "gates/gate5_watchdog.py",
+    "gates/gate6_pio_encoder.py",
 ]
 
 passed = 0
