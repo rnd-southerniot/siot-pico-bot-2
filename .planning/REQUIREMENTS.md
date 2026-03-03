@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Firmware
 
-- [ ] **FW-01**: Asyncio-based firmware architecture replacing v1 blocking loop
+- [x] **FW-01**: Asyncio-based firmware architecture replacing v1 blocking loop *(completed 01-01, 2026-03-03)*
 - [ ] **FW-02**: Motor control with encoder feedback for precise distance movement
 - [ ] **FW-03**: IMU-6050 integration for accurate turning (e.g., "turn exactly 90 degrees")
 - [ ] **FW-04**: Line following sensor support via IR sensors

@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 1 of 7 (Firmware Foundation)
-Plan: 0 of TBD in current phase
-Status: Ready to execute
-Last activity: 2026-03-03 — Phase 1 planned (4 plans in 3 waves), verified, ready for execution
+Plan: 1 of 4 in current phase
+Status: Executing
+Last activity: 2026-03-03 — Plan 01 complete: async skeleton, tasks/, main.py, gate1
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 4% (1/4 plans in Phase 1 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: —
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: 2 min
+- Total execution time: 0.03 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 01-firmware-foundation | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: —
+- Last 5 plans: [01-01: 2min]
 - Trend: —
 
 *Updated after each plan completion*
@@ -46,6 +46,9 @@ Recent decisions affecting current work:
 - [Init]: Custom block editor over Blockly — full branding control required for sellable product
 - [Init]: WiFi AP mode — rover creates its own hotspot; no school IT dependency
 - [Init]: exec() sandbox with watchdog — student runaway code in a classroom is a product-killer; must be built in Phase 2
+- [01-01]: Inline wdt_feed_loop in main.py — Plan 04 refactors into safety/watchdog.py WatchdogKeeper; avoids forward dependency
+- [01-01]: Motor PID stub uses measured=0.0 — encoder not yet available; architecture proven without hardware
+- [01-01]: sensor_poll_loop catches+continues on exception — sensor failure must never cancel motor task via gather()
 
 ### Pending Todos
 
@@ -61,6 +64,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Phase 1 planned and verified — 4 plans in 3 waves. Run /gsd:execute-phase 1 to execute.
-Resume file: .planning/phases/01-firmware-foundation/01-01-PLAN.md
+Stopped at: Completed 01-01-PLAN.md — async skeleton, tasks/, main.py, gate1, run_all
+Resume file: .planning/phases/01-firmware-foundation/01-02-PLAN.md
 Resume command: /gsd:execute-phase 1

@@ -32,7 +32,13 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. A turn command uses the IMU-6050 to rotate an accurate angle (within ±5 degrees)
   4. All sensors (IR line, obstacle, light/color) return readings on demand without crashing the event loop
   5. Student-runaway code triggers the hardware watchdog and the rover stops safely within 500ms
-**Plans**: TBD
+**Plans**: 4 plans
+
+Plans:
+- [x] 01-01-PLAN.md — Async skeleton: tasks/ module, main.py entry point, gate1 3-coroutine proof-of-concept
+- [ ] 01-02-PLAN.md — PIO encoder + motor HAL: EncoderPIO (hardware counting), MotorHAL (70% speed cap)
+- [ ] 01-03-PLAN.md — Sensor drivers + IMU: hal/imu.py, hal/sensors.py, hal/leds.py, gate3 + gate4
+- [ ] 01-04-PLAN.md — Safety layer + wiring: WatchdogKeeper, motor timeout, final main.py integration
 
 ### Phase 2: Robot API + HTTP Server
 **Goal**: A stable, documented robot facade API is locked and the HTTP server accepts exec() commands with a safety sandbox — the contract that all browser code will be written against
@@ -110,7 +116,7 @@ Note: Phases 3 and 4 both depend on Phase 2 and can execute in parallel.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Firmware Foundation | 0/TBD | Not started | - |
+| 1. Firmware Foundation | 1/4 | In progress | - |
 | 2. Robot API + HTTP Server | 0/TBD | Not started | - |
 | 3. React Connection Layer | 0/TBD | Not started | - |
 | 4. Block Editor + Code Generator | 0/TBD | Not started | - |
