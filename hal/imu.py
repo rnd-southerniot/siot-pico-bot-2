@@ -13,9 +13,10 @@ Usage:
     from machine import I2C, Pin
     import config
 
-    i2c = I2C(config.I2C_ID, sda=Pin(config.I2C_SDA),
-              scl=Pin(config.I2C_SCL), freq=config.I2C_FREQ)
-    imu_hal = IMUHAL(i2c)
+    from lib.mpu6050 import MPU6050
+    imu = MPU6050(config.I2C_ID, sda=config.I2C_SDA,
+                  scl=config.I2C_SCL, freq=config.I2C_FREQ)
+    imu_hal = IMUHAL(imu)
     imu_hal.calibrate()          # call at boot, BEFORE WDT starts
     tracker = HeadingTracker(imu_hal)
     # In async context:
@@ -36,12 +37,12 @@ class IMUHAL:
     directly from async tasks without await.
     """
 
-    def __init__(self, i2c):
+    def __init__(self, mpu):
         """
         Args:
-            i2c: machine.I2C instance (already initialised)
+            mpu: Already-constructed MPU6050 instance (from lib/mpu6050.py)
         """
-        self._imu = MPU6050(i2c)
+        self._imu = mpu
 
     def calibrate(self, samples: int = 200):
         """

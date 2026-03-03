@@ -14,15 +14,15 @@ Exports:
 
 import uasyncio
 import utime
-from lib.motor import Motor
+from hal.motors import MotorHAL
 from lib.pid import PID
 from hal.encoder_pio import EncoderPIO
 import config
 
 # ── Module-level hardware instances ──────────────────────────────────────────
-# Motor instances (safe to construct at import time — no PWM until drive() called)
-_left_motor  = Motor(config.MOTOR_LEFT_A,  config.MOTOR_LEFT_B)
-_right_motor = Motor(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
+# MotorHAL wraps lib/motor.py with normalised -1.0..1.0 interface and 70% speed cap.
+_left_motor  = MotorHAL(config.MOTOR_LEFT_A,  config.MOTOR_LEFT_B)
+_right_motor = MotorHAL(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
 
 # PIO quadrature encoders — PIO block 1 (SM IDs 4 & 5) to avoid NeoPixel conflict.
 # Pins must be consecutive: ENC_LEFT_A/B = GP6/GP7, ENC_RIGHT_A/B = GP26/GP27.
@@ -52,8 +52,17 @@ def get_target_rpm(side: str) -> float:
 
 
 def set_target_rpm(side: str, rpm: float):
-    """Set target RPM for 'left' or 'right' motor."""
+    """Set target RPM for 'left' or 'right' motor.
+
+    Arms the software motor timeout when any wheel has a non-zero target,
+    and disarms it when both wheels return to zero.
+    """
     _target_rpm[side] = rpm
+    if _watchdog is not None:
+        if _target_rpm["left"] != 0.0 or _target_rpm["right"] != 0.0:
+            _watchdog.arm_motor_timeout()
+        else:
+            _watchdog.disarm_motor_timeout()
 
 
 def set_watchdog(wdg):
