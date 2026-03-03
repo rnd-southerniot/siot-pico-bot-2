@@ -36,8 +36,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01-PLAN.md — Async skeleton: tasks/ module, main.py entry point, gate1 3-coroutine proof-of-concept
-- [ ] 01-02-PLAN.md — PIO encoder + motor HAL: EncoderPIO (hardware counting), MotorHAL (70% speed cap)
-- [ ] 01-03-PLAN.md — Sensor drivers + IMU: hal/imu.py, hal/sensors.py, hal/leds.py, gate3 + gate4
+- [x] 01-02-PLAN.md — PIO encoder + motor HAL: EncoderPIO (hardware counting), MotorHAL (70% speed cap)
+- [x] 01-03-PLAN.md — Sensor drivers + IMU: hal/imu.py, hal/sensors.py, hal/leds.py, gate3 + gate4
 - [ ] 01-04-PLAN.md — Safety layer + wiring: WatchdogKeeper, motor timeout, final main.py integration
 
 ### Phase 2: Robot API + HTTP Server
@@ -116,7 +116,7 @@ Note: Phases 3 and 4 both depend on Phase 2 and can execute in parallel.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Firmware Foundation | 2/4 | In Progress|  |
+| 1. Firmware Foundation | 3/4 | In Progress|  |
 | 2. Robot API + HTTP Server | 0/TBD | Not started | - |
 | 3. React Connection Layer | 0/TBD | Not started | - |
 | 4. Block Editor + Code Generator | 0/TBD | Not started | - |

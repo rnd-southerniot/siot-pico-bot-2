@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-03T03:40:17.085Z"
+last_updated: "2026-03-03T04:06:21Z"
 progress:
   total_phases: 1
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
 ---
 
 # Project State
@@ -23,27 +23,27 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 1 of 7 (Firmware Foundation)
-Plan: 2 of 4 in current phase
+Plan: 3 of 4 in current phase
 Status: Executing
-Last activity: 2026-03-03 — Plan 02 complete: PIO encoder HAL, MotorHAL speed cap, gate6, gate2
+Last activity: 2026-03-03 — Plan 03 complete: IMU HAL, sensor drivers, LED controller, gate3, gate4
 
-Progress: [██░░░░░░░░] 8% (2/4 plans in Phase 1 done)
+Progress: [███░░░░░░░] 11% (3/4 plans in Phase 1 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 3 min
-- Total execution time: 0.1 hours
+- Total plans completed: 3
+- Average duration: 3.3 min
+- Total execution time: 0.2 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-firmware-foundation | 2 | 6 min | 3 min |
+| 01-firmware-foundation | 3 | 10 min | 3.3 min |
 
 **Recent Trend:**
-- Last 5 plans: [01-01: 2min, 01-02: 4min]
+- Last 5 plans: [01-01: 2min, 01-02: 4min, 01-03: 4min]
 - Trend: —
 
 *Updated after each plan completion*
@@ -65,6 +65,9 @@ Recent decisions affecting current work:
 - [Phase 01-02]: PIO push-state approach for encoder: push raw 2-bit AB state to FIFO; Python uses quadrature lookup table for direction
 - [Phase 01-02]: SM IDs 4 and 5 (PIO block 1) for encoders to avoid NeoPixel conflict on PIO block 0
 - [Phase 01-02]: MotorHAL normalised speed interface (-1.0 to 1.0); K-8 70% speed cap enforced at HAL boundary (cannot be bypassed)
+- [Phase 01-03]: Only GP28 ADC pin is free (GP26/27 used by encoders) — IR_PINS=[28] default; 3-channel requires different sensor hardware
+- [Phase 01-03]: HeadingTracker injected via set_heading_tracker() — avoids circular init between main.py boot sequence and sensor_task module-level init
+- [Phase 01-03]: ColorSensor defaults to I2C TCS34725 (COLOR_ANALOG_PIN=None); shares I2C0 bus with IMU at different address (0x29 vs 0x68)
 
 ### Pending Todos
 
@@ -80,6 +83,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 01-02-PLAN.md — PIO encoder HAL, MotorHAL speed cap, gate6, gate2
-Resume file: .planning/phases/01-firmware-foundation/01-03-PLAN.md
+Stopped at: Completed 01-03-PLAN.md — IMU HAL, sensor drivers, LED controller, gate3, gate4
+Resume file: .planning/phases/01-firmware-foundation/01-04-PLAN.md
 Resume command: /gsd:execute-phase 1
