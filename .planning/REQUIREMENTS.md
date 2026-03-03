@@ -10,13 +10,13 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Firmware
 
 - [x] **FW-01**: Asyncio-based firmware architecture replacing v1 blocking loop *(completed 01-01, 2026-03-03)*
-- [ ] **FW-02**: Motor control with encoder feedback for precise distance movement
+- [x] **FW-02**: Motor control with encoder feedback for precise distance movement
 - [ ] **FW-03**: IMU-6050 integration for accurate turning (e.g., "turn exactly 90 degrees")
 - [ ] **FW-04**: Line following sensor support via IR sensors
 - [ ] **FW-05**: Obstacle detection sensor support
 - [ ] **FW-06**: Light/color sensor support
 - [ ] **FW-07**: Hardware watchdog for exec() safety (prevent runaway student code)
-- [ ] **FW-08**: PIO state machines for hardware encoder counting
+- [x] **FW-08**: PIO state machines for hardware encoder counting
 
 ### WiFi & Communication
 
@@ -94,13 +94,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | FW-01 | Phase 1 | Pending |
-| FW-02 | Phase 1 | Pending |
+| FW-02 | Phase 1 | Complete |
 | FW-03 | Phase 1 | Pending |
 | FW-04 | Phase 1 | Pending |
 | FW-05 | Phase 1 | Pending |
 | FW-06 | Phase 1 | Pending |
 | FW-07 | Phase 1 | Pending |
-| FW-08 | Phase 1 | Pending |
+| FW-08 | Phase 1 | Complete |
 | WIFI-01 | Phase 2 | Pending |
 | WIFI-02 | Phase 2 | Pending |
 | WIFI-03 | Phase 2 | Pending |

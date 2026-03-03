@@ -1,3 +1,16 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: unknown
+last_updated: "2026-03-03T03:40:17.085Z"
+progress:
+  total_phases: 1
+  completed_phases: 0
+  total_plans: 4
+  completed_plans: 2
+---
+
 # Project State
 
 ## Project Reference
@@ -10,27 +23,27 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 ## Current Position
 
 Phase: 1 of 7 (Firmware Foundation)
-Plan: 1 of 4 in current phase
+Plan: 2 of 4 in current phase
 Status: Executing
-Last activity: 2026-03-03 — Plan 01 complete: async skeleton, tasks/, main.py, gate1
+Last activity: 2026-03-03 — Plan 02 complete: PIO encoder HAL, MotorHAL speed cap, gate6, gate2
 
-Progress: [█░░░░░░░░░] 4% (1/4 plans in Phase 1 done)
+Progress: [██░░░░░░░░] 8% (2/4 plans in Phase 1 done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 2 min
-- Total execution time: 0.03 hours
+- Total plans completed: 2
+- Average duration: 3 min
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-firmware-foundation | 1 | 2 min | 2 min |
+| 01-firmware-foundation | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: [01-01: 2min]
+- Last 5 plans: [01-01: 2min, 01-02: 4min]
 - Trend: —
 
 *Updated after each plan completion*
@@ -49,6 +62,9 @@ Recent decisions affecting current work:
 - [01-01]: Inline wdt_feed_loop in main.py — Plan 04 refactors into safety/watchdog.py WatchdogKeeper; avoids forward dependency
 - [01-01]: Motor PID stub uses measured=0.0 — encoder not yet available; architecture proven without hardware
 - [01-01]: sensor_poll_loop catches+continues on exception — sensor failure must never cancel motor task via gather()
+- [Phase 01-02]: PIO push-state approach for encoder: push raw 2-bit AB state to FIFO; Python uses quadrature lookup table for direction
+- [Phase 01-02]: SM IDs 4 and 5 (PIO block 1) for encoders to avoid NeoPixel conflict on PIO block 0
+- [Phase 01-02]: MotorHAL normalised speed interface (-1.0 to 1.0); K-8 70% speed cap enforced at HAL boundary (cannot be bypassed)
 
 ### Pending Todos
 
@@ -64,6 +80,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 01-01-PLAN.md — async skeleton, tasks/, main.py, gate1, run_all
-Resume file: .planning/phases/01-firmware-foundation/01-02-PLAN.md
+Stopped at: Completed 01-02-PLAN.md — PIO encoder HAL, MotorHAL speed cap, gate6, gate2
+Resume file: .planning/phases/01-firmware-foundation/01-03-PLAN.md
 Resume command: /gsd:execute-phase 1
