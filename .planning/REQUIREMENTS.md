@@ -93,13 +93,47 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| — | — | — |
+| FW-01 | Phase 1 | Pending |
+| FW-02 | Phase 1 | Pending |
+| FW-03 | Phase 1 | Pending |
+| FW-04 | Phase 1 | Pending |
+| FW-05 | Phase 1 | Pending |
+| FW-06 | Phase 1 | Pending |
+| FW-07 | Phase 1 | Pending |
+| FW-08 | Phase 1 | Pending |
+| WIFI-01 | Phase 2 | Pending |
+| WIFI-02 | Phase 2 | Pending |
+| WIFI-03 | Phase 2 | Pending |
+| WIFI-04 | Phase 5 | Pending |
+| WIFI-05 | Phase 3 | Pending |
+| WIFI-06 | Phase 3 | Pending |
+| EDIT-01 | Phase 4 | Pending |
+| EDIT-02 | Phase 4 | Pending |
+| EDIT-03 | Phase 4 | Pending |
+| EDIT-04 | Phase 4 | Pending |
+| EDIT-05 | Phase 4 | Pending |
+| EDIT-06 | Phase 4 | Pending |
+| EDIT-07 | Phase 4 | Pending |
+| EDIT-08 | Phase 5 | Pending |
+| EDIT-09 | Phase 4 | Pending |
+| EDIT-10 | Phase 4 | Pending |
+| LESS-01 | Phase 6 | Pending |
+| LESS-02 | Phase 6 | Pending |
+| LESS-03 | Phase 6 | Pending |
+| LESS-04 | Phase 6 | Pending |
+| LESS-05 | Phase 6 | Pending |
+| LESS-06 | Phase 6 | Pending |
+| PROD-01 | Phase 7 | Pending |
+| PROD-02 | Phase 7 | Pending |
+| PROD-03 | Phase 7 | Pending |
+| PROD-04 | Phase 7 | Pending |
+| PROD-05 | Phase 7 | Pending |
 
 **Coverage:**
-- v1 requirements: 30 total
-- Mapped to phases: 0
-- Unmapped: 30 ⚠️
+- v1 requirements: 35 total
+- Mapped to phases: 35
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-03*
-*Last updated: 2026-03-03 after initial definition*
+*Last updated: 2026-03-03 after roadmap creation*
