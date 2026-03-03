@@ -103,6 +103,29 @@ PID_LOOP_HZ = 20
 PID_TARGET_RPM = 60
 
 # ──────────────────────────────────────────────
+# Sensor Pins — confirm with actual hardware before use
+# ──────────────────────────────────────────────
+# IR Line Sensors (analog ADC).
+# Pico W ADC-capable pins: GP26, GP27, GP28 only.
+# GP26 + GP27 are used by right encoder; GP28 is free.
+# For 3-channel IR array, a sensor with I2C multiplexer or
+# digital output (e.g. TCRT5000 with comparator) may be needed.
+# Default: single channel on GP28; update for actual hardware.
+IR_PINS = [28]             # ADC-capable pin(s) for IR line sensors
+
+# Ultrasonic distance sensor (HC-SR04 style).
+# Uses two free digital GPIO. GP2/GP3 are available.
+ULTRASONIC_TRIG = 2        # GP2 — trigger output
+ULTRASONIC_ECHO = 3        # GP3 — echo input
+
+# Color / light sensor.
+# Option A: Analog light sensor on ADC pin (uses GP28 if IR not active)
+# Option B: I2C TCS34725 — shares I2C0 bus with IMU (addr 0x29, no conflict)
+# Set COLOR_ANALOG_PIN to a GPIO number for analog mode,
+# or set to None and pass i2c to ColorSensor for I2C mode.
+COLOR_ANALOG_PIN = None    # None = I2C TCS34725 mode; set to ADC pin for analog
+
+# ──────────────────────────────────────────────
 # Autonomous Mission Defaults (Gate 9)
 # ──────────────────────────────────────────────
 MISSION_SIDE_MM     = 500    # 50 cm square

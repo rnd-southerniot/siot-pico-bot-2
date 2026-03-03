@@ -1,19 +1,84 @@
 """
 sensor_task.py — Async sensor poll coroutine (10Hz)
 
-Runs as one of the three concurrent coroutines under uasyncio.
-Stub writes a counter into the shared _sensor_state dict so other
-tasks can read it. Phase 2 replaces with real sensor reads.
+Runs as one of the concurrent coroutines under uasyncio.
+Polls all sensors at 10Hz and stores results in the shared _sensor_state dict
+so other tasks (motor PID, WiFi/HTTP) can read values without touching hardware.
+
+Sensor pin assignments are read from config.py:
+    config.IR_PINS            — ADC-capable GPIO pins for IR line sensors
+    config.ULTRASONIC_TRIG    — HC-SR04 trigger output GPIO
+    config.ULTRASONIC_ECHO    — HC-SR04 echo input GPIO
+    config.COLOR_ANALOG_PIN   — ADC GPIO for analog color; None = I2C TCS34725
+
+NOTE: Update config.py with actual hardware pins before deploying.
+The pin defaults in config.py are placeholders — verify against your wiring.
 
 Exports:
-  sensor_poll_loop()  — coroutine, schedule with uasyncio.gather()
-  get_sensor_state()  — returns the shared state dict
+    sensor_poll_loop()  — coroutine, schedule with uasyncio.gather()
+    get_sensor_state()  — returns a reference to the shared state dict
+
+Shared state keys:
+    "ir"          — list of int 0–65535 per IR channel
+    "distance_cm" — float cm from ultrasonic; -1.0 on timeout
+    "color"       — dict {'r','g','b','c'} (I2C) or {'lux': n} (analog)
+    "heading"     — float degrees from HeadingTracker (if IMU task running)
+    "tick"        — int iteration counter (monotonically increases)
 """
 
 import uasyncio
+from machine import I2C, Pin
 
-# Shared sensor state — written by this task, read by motor / wifi tasks
-_sensor_state = {}
+import config
+from hal.sensors import IRLineSensor, UltrasonicSensor, ColorSensor
+from hal.imu import IMUHAL, HeadingTracker
+
+# ── Shared sensor state ───────────────────────────────────────────────────────
+# Written by this task, read by motor / wifi tasks.
+_sensor_state = {
+    "ir":          [],
+    "distance_cm": -1.0,
+    "color":       {},
+    "heading":     0.0,
+    "tick":        0,
+}
+
+# ── Module-level sensor instances ─────────────────────────────────────────────
+# Instantiated once here; sensor_poll_loop() uses these throughout its lifetime.
+# If a sensor is not physically connected, the driver will either return -1.0
+# (ultrasonic timeout) or zeros — the loop will continue safely.
+
+_ir_sensor = IRLineSensor(config.IR_PINS)
+_us_sensor = UltrasonicSensor(config.ULTRASONIC_TRIG, config.ULTRASONIC_ECHO)
+
+# Color sensor: use analog pin if configured, otherwise I2C TCS34725
+if config.COLOR_ANALOG_PIN is not None:
+    _color_sensor = ColorSensor(analog_pin=config.COLOR_ANALOG_PIN)
+else:
+    # Share the I2C bus with the IMU (TCS34725 is addr 0x29; IMU is 0x68 — no conflict)
+    _shared_i2c = I2C(
+        config.I2C_ID,
+        sda=Pin(config.I2C_SDA),
+        scl=Pin(config.I2C_SCL),
+        freq=config.I2C_FREQ,
+    )
+    _color_sensor = ColorSensor(i2c=_shared_i2c)
+
+# HeadingTracker is managed externally (main.py passes an IMUHAL to it);
+# sensor_task exposes a setter so main.py can wire them together after boot.
+_heading_tracker = None
+
+
+def set_heading_tracker(tracker: HeadingTracker):
+    """
+    Wire in the HeadingTracker from main.py after IMU calibration.
+
+    Call this from main.py after calibration completes and before starting
+    the event loop. sensor_poll_loop() will then read heading from it.
+    """
+    global _heading_tracker
+    _heading_tracker = tracker
+
 
 # ── Public accessor ───────────────────────────────────────────────────────────
 
@@ -26,13 +91,15 @@ def get_sensor_state() -> dict:
 
 async def sensor_poll_loop():
     """
-    Sensor poll loop coroutine — runs at 10Hz (every 100ms).
+    Sensor poll coroutine — runs at 10Hz (every 100ms).
 
-    Stub behaviour: increments a tick counter and prints 'sensor tick'
-    every 10 iterations to show interleaving with the motor task.
+    Reads IR line sensors, ultrasonic distance, color, and heading on each
+    iteration and stores results in _sensor_state. All reads are async-safe
+    (no blocking spin-waits). See hal/sensors.py for implementation details.
 
     Exception handling: sensor failures must NOT propagate to gather()
-    and kill the motor task (Pitfall 2). Log and continue.
+    and kill the motor task (Pitfall 2 avoidance). Errors are logged and
+    the loop continues — a failed sensor returns stale values until it recovers.
     """
     iteration = 0
 
@@ -41,15 +108,21 @@ async def sensor_poll_loop():
             iteration += 1
             _sensor_state["tick"] = iteration
 
-            if iteration % 10 == 0:
-                print("sensor tick", iteration)
+            # IR line sensors — list of ADC readings (0–65535 per channel)
+            _sensor_state["ir"] = await _ir_sensor.read_all()
 
-            # Phase 2: replace with real reads, e.g.:
-            #   _sensor_state["ir"]  = await ir_sensor.read_all()
-            #   _sensor_state["dist"] = await ultrasonic.read_cm()
+            # Ultrasonic distance — cm; -1.0 on timeout
+            _sensor_state["distance_cm"] = await _us_sensor.read_cm()
+
+            # Color / light — dict with RGBC or lux key
+            _sensor_state["color"] = await _color_sensor.read()
+
+            # Heading — degrees from HeadingTracker update_loop (100Hz separate task)
+            if _heading_tracker is not None:
+                _sensor_state["heading"] = _heading_tracker.get_heading()
 
         except Exception as e:
-            # Log but continue — a sensor failure must not kill motor task
+            # Log but continue — sensor failure must not cancel motor task
             print("sensor_task ERROR (continuing):", e)
 
-        await uasyncio.sleep_ms(100)
+        await uasyncio.sleep_ms(100)  # 10Hz poll rate
