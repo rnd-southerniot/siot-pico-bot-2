@@ -91,6 +91,14 @@ except Exception as e:
     # LED failure is non-fatal — firmware continues without visual indicator
     print("LED init skipped:", e)
 
+# ── Step 7: Start WiFi AP (blocking — sync, before event loop) ──────────────
+# AP startup can take 1-2s. Done here (sync) to avoid blocking the event loop.
+# WDT is already armed but has 8s timeout — 10s AP deadline will trip WDT first
+# only if AP truly hangs, which is acceptable (device resets and retries on boot).
+
+from tasks.wifi_task import start_ap
+ap, ssid = start_ap()
+
 
 # ── Async main: gather all coroutines ────────────────────────────────────────
 
@@ -99,22 +107,22 @@ async def main_async():
     Start all task coroutines and the WDT feed loop concurrently.
 
     Coroutines:
-      motor_pid_loop()          — 20Hz motor PID with real encoder feedback
-      sensor_poll_loop()        — 10Hz sensor reads (IR, ultrasonic, color)
+      motor_pid_loop()              — 20Hz motor PID with real encoder feedback
+      sensor_poll_loop()            — 10Hz sensor reads (IR, ultrasonic, color)
       heading_tracker.update_loop() — 100Hz gyro-Z heading integration
-      wifi_placeholder()        — 1Hz placeholder (Phase 2 replaces with HTTP server)
-      watchdog.feed_loop()      — feeds hardware WDT every 4s (MUST keep running)
+      wifi_server_task()            — Microdot HTTP server on port 80 (AP already up)
+      watchdog.feed_loop()          — feeds hardware WDT every 4s (MUST keep running)
     """
     from tasks.motor_task import motor_pid_loop
     from tasks.sensor_task import sensor_poll_loop
-    from tasks.wifi_task import wifi_placeholder
+    from tasks.wifi_task import wifi_server_task
 
-    print("Starting event loop: motor | sensor | heading | wifi | watchdog")
+    print("Starting event loop: motor | sensor | heading | wifi/http | watchdog")
     await uasyncio.gather(
         motor_pid_loop(),
         sensor_poll_loop(),
         heading_tracker.update_loop(),
-        wifi_placeholder(),
+        wifi_server_task(),          # HTTP server — AP started in Step 7 above
         watchdog.feed_loop(),
     )
 

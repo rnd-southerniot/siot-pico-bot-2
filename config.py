@@ -77,12 +77,12 @@ BUTTON_B_PIN   = 21   # GP21 — Programmable button B
 SERVO_PINS = [12, 13, 14, 15]  # GP12–GP15
 
 # ──────────────────────────────────────────────
-# WiFi (Gate 8)
+# WiFi (Phase 2)
 # ──────────────────────────────────────────────
-WIFI_AP_SSID     = "RoboPico-Lab"
-WIFI_AP_PASSWORD = "robopico1"
-WIFI_AP_IP       = "192.168.4.1"
-HTTP_PORT        = 80
+WIFI_AP_SSID_PREFIX = "RoboPico"      # MAC suffix appended: "RoboPico-XXXX"
+WIFI_AP_PASSWORD    = "robopico1"
+WIFI_AP_IP          = "192.168.4.1"   # Pico W AP default (not set manually)
+HTTP_PORT           = 80
 
 # ──────────────────────────────────────────────
 # Motor Safety (K-8 classroom safety cap)
