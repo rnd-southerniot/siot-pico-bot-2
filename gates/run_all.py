@@ -23,6 +23,7 @@ GATES = [
     "gates/gate4_sensors.py",
     "gates/gate5_watchdog.py",
     "gates/gate6_pio_encoder.py",
+    "gates/gate7_exec_sandbox.py",
 ]
 
 passed = 0
