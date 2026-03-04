@@ -22,7 +22,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **WIFI-01**: WiFi AP mode — rover creates its own hotspot
 - [ ] **WIFI-02**: Per-unit unique SSID to avoid classroom conflicts
-- [ ] **WIFI-03**: JSON-based command/telemetry protocol
+- [x] **WIFI-03**: JSON-based command/telemetry protocol
 - [ ] **WIFI-04**: WebSocket for real-time bidirectional communication
 - [ ] **WIFI-05**: Graceful WiFi reconnection without page refresh
 - [ ] **WIFI-06**: mDNS discovery — connect by name instead of IP
@@ -103,7 +103,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FW-08 | Phase 1 | Complete |
 | WIFI-01 | Phase 2 | Pending |
 | WIFI-02 | Phase 2 | Pending |
-| WIFI-03 | Phase 2 | Pending |
+| WIFI-03 | Phase 2 | Complete |
 | WIFI-04 | Phase 5 | Pending |
 | WIFI-05 | Phase 3 | Pending |
 | WIFI-06 | Phase 3 | Pending |
