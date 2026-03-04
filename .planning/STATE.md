@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-04T23:45:41.582Z"
+last_updated: "2026-03-05T00:03:00.000Z"
 progress:
   total_phases: 2
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 6
-  completed_plans: 5
+  completed_plans: 6
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** A kid can unbox the kit, connect to the rover over WiFi, and complete guided lessons using block coding — learning robotics concepts while having fun.
-**Current focus:** Phase 2 - Robot API + HTTP Server
+**Current focus:** Phase 2 complete — ready for Phase 3 (Block Editor UI)
 
 ## Current Position
 
-Phase: 2 of 7 (Robot API + HTTP Server)
-Plan: 1 of 2 in current phase (02-01 complete)
-Status: Executing
-Last activity: 2026-03-05 — Phase 2 Plan 01 complete (RobotAPI facade + exec() sandbox)
+Phase: 2 of 7 (Robot API + HTTP Server) — COMPLETE
+Plan: 2 of 2 in current phase (02-02 complete)
+Status: Phase complete
+Last activity: 2026-03-05 — Phase 2 Plan 02 complete (Microdot WiFi AP + HTTP server)
 
-Progress: [███░░░░░░░] 21% (Phase 1 done, Phase 2 plan 1/2 done)
+Progress: [████░░░░░░] 29% (Phase 1 done, Phase 2 done)
 
 ## Performance Metrics
 
@@ -41,10 +41,10 @@ Progress: [███░░░░░░░] 21% (Phase 1 done, Phase 2 plan 1/2 d
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 01-firmware-foundation | 4 | 14 min | 3.5 min |
-| 02-robot-api-http-server | 1 | 2 min | 2.0 min |
+| 02-robot-api-http-server | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: [01-01: 2min, 01-02: 4min, 01-03: 4min, 01-04: 4min, 02-01: 2min]
+- Last 6 plans: [01-01: 2min, 01-02: 4min, 01-03: 4min, 01-04: 4min, 02-01: 2min, 02-02: 3min]
 - Trend: stable ~3min/plan
 
 *Updated after each plan completion*
@@ -68,6 +68,11 @@ Recent decisions affecting current work:
 - [Phase 02-01]: RobotAPI wraps motor_task/sensor_task with private _module imports — API surface is deliberately small
 - [Phase 02-01]: Sandbox blocks ALL imports via custom __import__ — no allow-list by module name
 - [Phase 02-01]: run_student_code() never raises — always returns JSON-serializable dict for safe HTTP response encoding
+- [Phase 02-02]: start_ap() is sync — AP activation blocks for 1-2s, must NOT be inside event loop
+- [Phase 02-02]: CORS(app, allowed_origins='*') initialized at module level — browser blocking prevention baked in from day one
+- [Phase 02-02]: Route named exec_endpoint (not exec) — avoids shadowing Python builtin
+- [Phase 02-02]: WIFI_AP_SSID_PREFIX replaces static SSID — MAC suffix makes each rover uniquely identifiable in classroom
+- [Phase 02-02]: wifi_server_task() catches all exceptions — prevents Microdot crash from cascade-cancelling motor/sensor tasks
 
 ### Pending Todos
 
@@ -83,6 +88,6 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-05
-Stopped at: Completed 02-robot-api-http-server 02-01-PLAN.md (RobotAPI + sandbox)
-Resume file: .planning/phases/02-robot-api-http-server/02-02-PLAN.md
-Resume command: /gsd:execute-phase 02
+Stopped at: Completed 02-robot-api-http-server 02-02-PLAN.md (Microdot WiFi AP + HTTP server)
+Resume file: Phase 2 complete — next: Phase 3 (Block Editor UI)
+Resume command: /gsd:execute-phase 03
