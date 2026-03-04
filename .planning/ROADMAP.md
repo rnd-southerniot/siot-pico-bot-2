@@ -49,7 +49,11 @@ Plans:
   2. A browser can reach the rover at a fixed IP and receive a JSON status response
   3. A POST /exec request runs a robot.py facade method and the rover responds
   4. Injecting `import machine` into exec() is rejected and the rover does not crash
-**Plans**: TBD
+**Plans**: 2 plans
+
+Plans:
+- [ ] 02-01-PLAN.md — Robot API facade (robot.py) + exec() sandbox (safety/sandbox.py) + gate7 verification
+- [ ] 02-02-PLAN.md — WiFi AP with MAC-derived SSID + Microdot HTTP server + main.py integration
 
 ### Phase 3: React Connection Layer
 **Goal**: The React app reliably connects to the rover, survives disconnects, and can be discovered by name instead of IP address
