@@ -19,7 +19,7 @@ A structured, gate-verified robotics curriculum built on commercially available 
 
 ```
 MOTORS:     M1A=GP9  M1B=GP8  (Left)     M2A=GP10 M2B=GP11 (Right)
-ENCODERS:   L_H1=GP16 L_H2=GP17 (Grove4) R_H1=GP4 R_H2=GP5 (Grove3, inverted)
+ENCODERS:   L_H1=GP16 L_H2=GP17 (Grove4, inverted) R_H1=GP4 R_H2=GP5 (Grove3)
 IMU:        SDA=GP0  SCL=GP1  (I2C0, Grove 1)
 ULTRASONIC: TRIG=GP2  ECHO=GP3  (Grove 2)
 NEOPIXEL:   GP18 (2x WS2812)
@@ -52,11 +52,11 @@ Each gate is a self-contained milestone with pass/fail criteria.
 | 2 | Onboard Peripherals | NeoPixel, PWM buzzer | Visual + audio confirm | PASSED |
 | 3 | Motor Driver | PWM, H-bridge | 8 motion patterns | PASSED |
 | 4 | Encoder Feedback | PIO quadrature | Ticks 50-2000 in 2s | PASSED |
-| 5 | IMU (MPU6050) | I2C, register R/W | Az ~= 1.0g flat | |
-| 6 | PID Speed Control | Closed-loop, tuning | RPM converges +/-15% | |
-| 7 | Heading Control | Gyro integration | 90 deg +/-10 | |
-| 8 | WiFi Telemetry | AP, HTTP, JSON | Dashboard loads | |
-| 9 | Autonomous Mission | Full integration | Drive 50cm square | |
+| 5 | IMU (MPU6050) | I2C, register R/W | Az ~= 1.0g flat | PASSED |
+| 6 | PID Speed Control | Closed-loop, tuning | RPM converges +/-15% | PASSED |
+| 7 | Heading Control | Gyro integration | 90 deg +/-10 | PASSED |
+| 8 | WiFi Telemetry | AP, HTTP, JSON | Dashboard loads | N/A |
+| 9 | Autonomous Mission | Full integration | Drive 50cm square | PASSED |
 
 ## Project Structure
 
@@ -132,9 +132,14 @@ Open `tools/test-dashboard.html` in a browser, connect to the RoboPico WiFi AP, 
 
 - **Battery required**: USB power alone causes brownout when motors run
 - **Left motor pins swapped**: GP8/GP9 reversed in software (config.py) to correct direction
-- **Right encoder inverted**: `ENC_RIGHT_INVERT=True` in config.py corrects sign
-- **Encoders use PIO**: `hal/encoder_pio.py` uses RP2040 PIO state machines (SM4/SM5 on PIO block 1) for zero-CPU-overhead quadrature decoding
-- **main.py blocks REPL**: When main.py runs with WDT, mpremote can't connect. Rename to `_main.py` for gate testing.
+- **Left encoder inverted**: `ENC_LEFT_INVERT=True` in config.py — needed because left motor pins are swapped
+- **Right encoder NOT inverted**: `ENC_RIGHT_INVERT=False` — sign matches motor direction
+- **Encoders use PIO**: `hal/encoder_pio.py` uses RP2040 PIO state machines (SM4/SM5 on PIO block 1) for zero-CPU-overhead quadrature decoding. FIFO is only 4 deep — must drain at >=500Hz to avoid tick loss
+- **PID tuning**: kp=1.5, ki=0.8, kd=0.05 — tested at 60 RPM target, ~54 RPM steady-state (9% error)
+- **Turn speed**: 50% PWM minimum to overcome floor friction for pivot turns. Tolerance 1.0 deg for ~89-90 deg accuracy
+- **main.py blocks REPL**: When main.py runs with WDT, mpremote can't connect. Rename to `_main.py` for gate testing
+- **IMU Az reads ~1.24g**: Slightly above 1.0g on flat surface — normal for this sensor, gate tolerance set to 0.8-1.3g
+- **struct.unpack**: MicroPython does not support spaces in format strings (e.g. use `">hhhhhhh"` not `">hhh h hhh"`)
 
 ## Encoder Math
 

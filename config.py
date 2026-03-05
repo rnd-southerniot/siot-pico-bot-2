@@ -27,7 +27,8 @@ ENC_LEFT_A  = 16   # GP16 — Left Hall H1 (Grove 4, Channel A)
 ENC_LEFT_B  = 17   # GP17 — Left Hall H2 (Grove 4, Channel B)
 ENC_RIGHT_A = 4    # GP4  — Right Hall H1 (Grove 3, Channel A)
 ENC_RIGHT_B = 5    # GP5  — Right Hall H2 (Grove 3, Channel B)
-ENC_RIGHT_INVERT = True   # Right encoder sign is inverted vs motor direction
+ENC_LEFT_INVERT  = True   # Left encoder sign inverted (motor pins swapped GP8↔GP9)
+ENC_RIGHT_INVERT = False  # Right encoder sign matches motor direction
 
 # ──────────────────────────────────────────────
 # Encoder Constants
@@ -97,8 +98,8 @@ MOTOR_MAX_SPEED_PCT = 70
 # ──────────────────────────────────────────────
 # PID Defaults (Gate 6) — tune for your motors
 # ──────────────────────────────────────────────
-PID_KP = 0.8
-PID_KI = 0.3
+PID_KP = 1.5
+PID_KI = 0.8
 PID_KD = 0.05
 PID_LOOP_HZ = 20
 PID_TARGET_RPM = 60
@@ -132,5 +133,5 @@ COLOR_ANALOG_PIN = None    # None = I2C TCS34725 mode; set to ADC pin for analog
 MISSION_SIDE_MM     = 500    # 50 cm square
 MISSION_TURN_DEG    = 90
 MISSION_DRIVE_SPEED = 40     # % PWM
-MISSION_TURN_SPEED  = 30     # % PWM
-MISSION_TURN_TOL    = 3.0    # degrees
+MISSION_TURN_SPEED  = 50     # % PWM
+MISSION_TURN_TOL    = 1.0    # degrees

@@ -40,8 +40,8 @@ class RobotAPI:
         """Return current robot state as JSON-serializable dict."""
         state = _sensor_task.get_sensor_state()
         return {
-            "rpm_left":    _motor_task.get_target_rpm("left"),
-            "rpm_right":   _motor_task.get_target_rpm("right"),
+            "rpm_left":    _motor_task.get_actual_rpm("left"),
+            "rpm_right":   _motor_task.get_actual_rpm("right"),
             "ir":          state["ir"],
             "distance_cm": state["distance_cm"],
             "color":       state["color"],

@@ -27,7 +27,8 @@ _right_motor = MotorHAL(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
 # PIO quadrature encoders — PIO block 1 (SM IDs 4 & 5) to avoid NeoPixel conflict.
 # Pins must be consecutive: ENC_LEFT_A/B = GP6/GP7, ENC_RIGHT_A/B = GP26/GP27.
 # SM IDs 4/5 = PIO block 1; NeoPixel on PIO block 0 SM 0 (no conflict).
-_left_enc  = EncoderPIO(config.ENC_LEFT_A,  config.ENC_LEFT_B,  sm_id=4)
+_left_enc  = EncoderPIO(config.ENC_LEFT_A,  config.ENC_LEFT_B,  sm_id=4,
+                        invert=getattr(config, "ENC_LEFT_INVERT", False))
 _right_enc = EncoderPIO(config.ENC_RIGHT_A, config.ENC_RIGHT_B, sm_id=5,
                         invert=getattr(config, "ENC_RIGHT_INVERT", False))
 
@@ -37,6 +38,9 @@ _right_pid = PID(config.PID_KP, config.PID_KI, config.PID_KD)
 
 # Shared target RPM state — written by external commands, read by PID loop
 _target_rpm = {"left": 0.0, "right": 0.0}
+
+# Measured RPM state — written by PID loop, read by status endpoint
+_actual_rpm = {"left": 0.0, "right": 0.0}
 
 # WatchdogKeeper — injected by main.py via set_watchdog() after WDT creation.
 # None until set; check_motor_timeout / emergency_stop are no-ops when None.
@@ -50,6 +54,11 @@ _last_tick_ms = utime.ticks_ms()
 def get_target_rpm(side: str) -> float:
     """Return current target RPM for 'left' or 'right' motor."""
     return _target_rpm[side]
+
+
+def get_actual_rpm(side: str) -> float:
+    """Return measured RPM for 'left' or 'right' motor."""
+    return _actual_rpm[side]
 
 
 def set_target_rpm(side: str, rpm: float):
@@ -121,6 +130,8 @@ async def motor_pid_loop():
             # when the event loop runs late (Pitfall 4 from research).
             left_rpm_actual  = _left_enc.rpm(dt)  if dt > 0 else 0.0
             right_rpm_actual = _right_enc.rpm(dt) if dt > 0 else 0.0
+            _actual_rpm["left"]  = left_rpm_actual
+            _actual_rpm["right"] = right_rpm_actual
 
             # ── Step 3: Compute PID correction using real encoder feedback ─────
             left_out  = _left_pid.compute(_target_rpm["left"],  left_rpm_actual,  dt if dt > 0 else 0.05)

@@ -20,6 +20,7 @@ sys.path.insert(0, ".")
 from config import (
     MOTOR_LEFT_A, MOTOR_LEFT_B, MOTOR_RIGHT_A, MOTOR_RIGHT_B,
     ENC_LEFT_A, ENC_LEFT_B, ENC_RIGHT_A, ENC_RIGHT_B,
+    ENC_LEFT_INVERT, ENC_RIGHT_INVERT,
 )
 from motor import Motor
 from hal.encoder_pio import EncoderPIO
@@ -46,8 +47,8 @@ def run():
 
     ml = Motor(MOTOR_LEFT_A, MOTOR_LEFT_B)
     mr = Motor(MOTOR_RIGHT_A, MOTOR_RIGHT_B)
-    enc_l = EncoderPIO(ENC_LEFT_A, ENC_LEFT_B, sm_id=4)
-    enc_r = EncoderPIO(ENC_RIGHT_A, ENC_RIGHT_B, sm_id=5, invert=True)
+    enc_l = EncoderPIO(ENC_LEFT_A, ENC_LEFT_B, sm_id=4, invert=ENC_LEFT_INVERT)
+    enc_r = EncoderPIO(ENC_RIGHT_A, ENC_RIGHT_B, sm_id=5, invert=ENC_RIGHT_INVERT)
 
     passed = True
     test_speed = 50

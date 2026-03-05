@@ -1,9 +1,18 @@
 # safety/sandbox.py — exec() restricted environment
 
+import time as _time
+
+_ALLOWED_MODULES = {
+    "time": _time,
+}
+
 
 def _safe_import(name, *args, **kwargs):
-    """Custom __import__ for exec() sandbox. Blocks ALL module imports."""
-    raise ImportError("import is not allowed in robot programs. Use robot.forward() etc.")
+    """Custom __import__ for exec() sandbox. Only allows whitelisted modules."""
+    if name in _ALLOWED_MODULES:
+        return _ALLOWED_MODULES[name]
+    raise ImportError("import '{}' is not allowed. Only: {}".format(
+        name, ", ".join(_ALLOWED_MODULES.keys())))
 
 
 _SAFE_BUILTINS = {
