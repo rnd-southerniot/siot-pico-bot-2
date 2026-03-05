@@ -60,7 +60,8 @@ import tasks.sensor_task as sensor_task
 imu_hal = IMUHAL(imu)
 heading_tracker = HeadingTracker(imu_hal)
 sensor_task.set_heading_tracker(heading_tracker)
-print("HeadingTracker wired into sensor_task")
+sensor_task.set_i2c(imu._i2c)              # share I2C bus — avoids dual I2C(0)
+print("HeadingTracker and shared I2C wired into sensor_task")
 
 # ── Step 4: Start WDT AFTER calibration via WatchdogKeeper ───────────────────
 # WatchdogKeeper wraps machine.WDT and provides the feed_loop coroutine plus

@@ -15,6 +15,8 @@ NOTE: Update config.py with actual hardware pins before deploying.
 The pin defaults in config.py are placeholders — verify against your wiring.
 
 Exports:
+    set_i2c(i2c)        — inject shared I2C bus from main.py (call before event loop)
+    set_heading_tracker(tracker) — inject HeadingTracker from main.py (call before event loop)
     sensor_poll_loop()  — coroutine, schedule with uasyncio.gather()
     get_sensor_state()  — returns a reference to the shared state dict
 
@@ -27,7 +29,6 @@ Shared state keys:
 """
 
 import uasyncio
-from machine import I2C, Pin
 
 import config
 from hal.sensors import IRLineSensor, UltrasonicSensor, ColorSensor
@@ -55,18 +56,28 @@ _us_sensor = UltrasonicSensor(config.ULTRASONIC_TRIG, config.ULTRASONIC_ECHO)
 if config.COLOR_ANALOG_PIN is not None:
     _color_sensor = ColorSensor(analog_pin=config.COLOR_ANALOG_PIN)
 else:
-    # Share the I2C bus with the IMU (TCS34725 is addr 0x29; IMU is 0x68 — no conflict)
-    _shared_i2c = I2C(
-        config.I2C_ID,
-        sda=Pin(config.I2C_SDA),
-        scl=Pin(config.I2C_SCL),
-        freq=config.I2C_FREQ,
-    )
-    _color_sensor = ColorSensor(i2c=_shared_i2c)
+    # I2C mode: ColorSensor initialized in set_i2c() — called from main.py
+    _color_sensor = None
 
 # HeadingTracker is managed externally (main.py passes an IMUHAL to it);
 # sensor_task exposes a setter so main.py can wire them together after boot.
 _heading_tracker = None
+
+# I2C bus shared with IMU — injected from main.py via set_i2c()
+_shared_i2c = None
+
+
+def set_i2c(i2c):
+    """
+    Wire in the shared I2C bus from main.py after IMU init.
+
+    Call this from main.py after MPU6050 init and before starting
+    the event loop. sensor_poll_loop() will then use the shared bus
+    for ColorSensor reads — avoiding a second I2C(0) instantiation.
+    """
+    global _shared_i2c, _color_sensor
+    _shared_i2c = i2c
+    _color_sensor = ColorSensor(i2c=_shared_i2c)
 
 
 def set_heading_tracker(tracker: HeadingTracker):
@@ -115,7 +126,8 @@ async def sensor_poll_loop():
             _sensor_state["distance_cm"] = await _us_sensor.read_cm()
 
             # Color / light — dict with RGBC or lux key
-            _sensor_state["color"] = await _color_sensor.read()
+            if _color_sensor is not None:
+                _sensor_state["color"] = await _color_sensor.read()
 
             # Heading — degrees from HeadingTracker update_loop (100Hz separate task)
             if _heading_tracker is not None:
