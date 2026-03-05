@@ -15,7 +15,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **FW-04**: Line following sensor support via IR sensors *(completed 01-03, 2026-03-03)*
 - [x] **FW-05**: Obstacle detection sensor support *(completed 01-03, 2026-03-03)*
 - [x] **FW-06**: Light/color sensor support *(completed 01-03, 2026-03-03)*
-- [ ] **FW-07**: Hardware watchdog for exec() safety (prevent runaway student code)
+- [x] **FW-07**: Hardware watchdog for exec() safety (prevent runaway student code) *(completed 01-04, verified in v1.0 audit — code correct, tracking error fixed)*
 - [x] **FW-08**: PIO state machines for hardware encoder counting
 
 ### WiFi & Communication
@@ -93,13 +93,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FW-01 | Phase 1 | Pending |
+| FW-01 | Phase 1 | Complete |
 | FW-02 | Phase 1 | Complete |
 | FW-03 | Phase 1 | Complete |
 | FW-04 | Phase 1 | Complete |
 | FW-05 | Phase 1 | Complete |
 | FW-06 | Phase 1 | Complete |
-| FW-07 | Phase 1 | Pending |
+| FW-07 | Phase 1 | Complete |
 | FW-08 | Phase 1 | Complete |
 | WIFI-01 | Phase 2 | Complete |
 | WIFI-02 | Phase 2 | Complete |

@@ -19,6 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5: WebSocket + Real-Time Execution** - WebSocket upgrade for sub-100ms telemetry and block execution trace
 - [ ] **Phase 6: Lesson System + Curriculum** - JSON-driven lesson system with 5-8 progressive lessons and narrative arc
 - [ ] **Phase 7: Product Quality + Packaging** - Sellable product hardening: pre-flash, QR setup, documentation, cross-platform validation
+- [ ] **Phase 8: Phase 1-2 Audit Fixes** - Fix tracking errors and integration defects from v1.0 milestone audit
 
 ## Phase Details
 
@@ -38,7 +39,7 @@ Plans:
 - [x] 01-01-PLAN.md — Async skeleton: tasks/ module, main.py entry point, gate1 3-coroutine proof-of-concept
 - [x] 01-02-PLAN.md — PIO encoder + motor HAL: EncoderPIO (hardware counting), MotorHAL (70% speed cap)
 - [x] 01-03-PLAN.md — Sensor drivers + IMU: hal/imu.py, hal/sensors.py, hal/leds.py, gate3 + gate4
-- [ ] 01-04-PLAN.md — Safety layer + wiring: WatchdogKeeper, motor timeout, final main.py integration
+- [x] 01-04-PLAN.md — Safety layer + wiring: WatchdogKeeper, motor timeout, final main.py integration
 
 ### Phase 2: Robot API + HTTP Server
 **Goal**: A stable, documented robot facade API is locked and the HTTP server accepts exec() commands with a safety sandbox — the contract that all browser code will be written against
@@ -52,8 +53,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md — Robot API facade (robot.py) + exec() sandbox (safety/sandbox.py) + gate7 verification
-- [ ] 02-02-PLAN.md — WiFi AP with MAC-derived SSID + Microdot HTTP server + main.py integration
+- [x] 02-01-PLAN.md — Robot API facade (robot.py) + exec() sandbox (safety/sandbox.py) + gate7 verification
+- [x] 02-02-PLAN.md — WiFi AP with MAC-derived SSID + Microdot HTTP server + main.py integration
 
 ### Phase 3: React Connection Layer
 **Goal**: The React app reliably connects to the rover, survives disconnects, and can be discovered by name instead of IP address
@@ -111,6 +112,17 @@ Plans:
   5. A printed or digital Getting Started guide lets a teacher run the first lesson without prior robotics knowledge
 **Plans**: TBD
 
+### Phase 8: Phase 1-2 Audit Fixes
+**Goal**: Fix tracking errors and integration defects discovered during v1.0 milestone audit — FW-07 documentation, shared I2C handle, legacy gate8 cleanup
+**Depends on**: Phase 1, Phase 2
+**Requirements**: FW-07 (tracking fix only — code already verified correct)
+**Gap Closure**: Closes gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Plan 01-04 SUMMARY frontmatter correctly lists FW-07 in requirements-completed
+  2. sensor_task.py and main.py share a single I2C(0) instance — no duplicate bus initialization
+  3. gate8_wifi_telemetry.py does not reference removed config constants
+**Plans**: TBD
+
 ## Progress
 
 **Execution Order:**
@@ -120,10 +132,11 @@ Note: Phases 3 and 4 both depend on Phase 2 and can execute in parallel.
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Firmware Foundation | 3/4 | In Progress|  |
-| 2. Robot API + HTTP Server | 0/TBD | Not started | - |
+| 1. Firmware Foundation | 4/4 | Complete | 2026-03-04 |
+| 2. Robot API + HTTP Server | 2/2 | Complete | 2026-03-04 |
 | 3. React Connection Layer | 0/TBD | Not started | - |
 | 4. Block Editor + Code Generator | 0/TBD | Not started | - |
 | 5. WebSocket + Real-Time Execution | 0/TBD | Not started | - |
 | 6. Lesson System + Curriculum | 0/TBD | Not started | - |
 | 7. Product Quality + Packaging | 0/TBD | Not started | - |
+| 8. Phase 1-2 Audit Fixes | 0/TBD | Not started | - |
