@@ -25,38 +25,30 @@ from machine import Pin
 import utime
 
 
-@rp2.asm_pio()
+@rp2.asm_pio(in_shiftdir=rp2.PIO.SHIFT_LEFT)
 def _quadrature_state_push():
     """
     Push 2-bit AB state to RX FIFO on every state change.
 
-    Python uses a quadrature lookup table to determine direction and
-    accumulate the signed tick count. This is the standard community
-    pattern for RP2040 PIO quadrature encoders.
-
-    Requirements:
-      in_base must be set to Pin(pin_a).
-      Pin(pin_b) must be in_base + 1 (consecutive GPIO).
-
-    Behaviour:
-      - Reads A and B simultaneously via in_(pins, 2).
-      - Compares to previous state stored in X.
-      - On state change: pushes new 2-bit state to FIFO, updates X.
-      - On no change: tight loop (no FIFO write).
+    Uses X as previous state. On change: push new state, update X.
+    On no change: tight poll loop via wrap.
+    in_base must be pin_a; pin_b must be pin_a + 1.
     """
-    # X = sentinel 0b11 forces the first comparison to detect "changed"
-    # so we push the initial AB state and set the baseline correctly.
+    # Init: set X to impossible sentinel so first read always triggers "changed"
     set(x, 0b11)
 
+    label("poll")
     wrap_target()
-    in_(pins, 2)             # read A and B into ISR (right-justified, 2 bits)
-    mov(y, isr)              # Y = current AB state
+    mov(osr, null)           # clear OSR
+    mov(isr, null)           # clear ISR so in_ starts fresh
+    in_(pins, 2)             # read 2 bits (A,B) into ISR
+    mov(y, isr)              # Y = current AB state (lower 2 bits)
     jmp(x_not_y, "changed")  # if X != Y, state changed
-    jmp("wrap_target")       # no change — tight poll loop
+    jmp("poll")              # no change — loop back
 
     label("changed")
-    push(noblock)            # push Y (new 2-bit AB state) to RX FIFO
-    mov(x, y)                # update previous state (X = Y)
+    push(noblock)            # push Y to RX FIFO (also clears ISR)
+    mov(x, y)                # update previous state
     wrap()
 
 
@@ -92,16 +84,14 @@ class EncoderPIO:
     neopixel module (which claims PIO block 0 SM 0).
     """
 
-    def __init__(self, pin_a: int, pin_b: int, sm_id: int = 4):
+    def __init__(self, pin_a: int, pin_b: int, sm_id: int = 4, invert: bool = False):
         """
         Args:
             pin_a:  GPIO pin number for encoder channel A (H1).
             pin_b:  GPIO pin number for encoder channel B (H2).
                     Must be pin_a + 1 for PIO in_(pins, 2) to read both.
             sm_id:  PIO state machine ID (0-7). Defaults to 4 (PIO block 1).
-                    Assign left encoder sm_id=4, right encoder sm_id=5.
-                    If PIO block 1 is unavailable, use sm_id=2/3 and verify
-                    no NeoPixel conflict on the bench.
+            invert: If True, negate the count direction.
         """
         self._pin_a = Pin(pin_a, Pin.IN, Pin.PULL_UP)
         self._pin_b = Pin(pin_b, Pin.IN, Pin.PULL_UP)
@@ -116,6 +106,7 @@ class EncoderPIO:
         self._count = 0
         self._last_count = 0
         self._last_time = utime.ticks_ms()
+        self._sign = -1 if invert else 1
         # Set initial previous-state baseline from current pin values.
         # Matches the PIO's X initialisation (sentinel 0b11 forces first
         # push, so we rely on the initial pin read here, not 0b11).
@@ -138,7 +129,7 @@ class EncoderPIO:
             raw = self._sm.get()
             curr_ab = raw & 0b11        # lower 2 bits = AB state
             idx = (self._prev_ab << 2) | curr_ab
-            self._count += _QUAD_TABLE[idx]
+            self._count += _QUAD_TABLE[idx] * self._sign
             self._prev_ab = curr_ab
         return self._count
 

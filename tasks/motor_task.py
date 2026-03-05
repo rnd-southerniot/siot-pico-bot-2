@@ -28,7 +28,8 @@ _right_motor = MotorHAL(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
 # Pins must be consecutive: ENC_LEFT_A/B = GP6/GP7, ENC_RIGHT_A/B = GP26/GP27.
 # SM IDs 4/5 = PIO block 1; NeoPixel on PIO block 0 SM 0 (no conflict).
 _left_enc  = EncoderPIO(config.ENC_LEFT_A,  config.ENC_LEFT_B,  sm_id=4)
-_right_enc = EncoderPIO(config.ENC_RIGHT_A, config.ENC_RIGHT_B, sm_id=5)
+_right_enc = EncoderPIO(config.ENC_RIGHT_A, config.ENC_RIGHT_B, sm_id=5,
+                        invert=getattr(config, "ENC_RIGHT_INVERT", False))
 
 # PID controllers — one per wheel
 _left_pid  = PID(config.PID_KP, config.PID_KI, config.PID_KD)

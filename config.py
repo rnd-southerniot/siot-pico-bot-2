@@ -13,8 +13,8 @@ Hardware:
 # ──────────────────────────────────────────────
 # Motor Driver (MX1515H on Robo Pico)
 # ──────────────────────────────────────────────
-MOTOR_LEFT_A  = 8    # GP8  — M1A (forward)
-MOTOR_LEFT_B  = 9    # GP9  — M1B (backward)
+MOTOR_LEFT_A  = 9    # GP9  — M1A (forward)  [swapped: motor spins reversed]
+MOTOR_LEFT_B  = 8    # GP8  — M1B (backward) [swapped: motor spins reversed]
 MOTOR_RIGHT_A = 10   # GP10 — M2A (forward)
 MOTOR_RIGHT_B = 11   # GP11 — M2B (backward)
 MOTOR_PWM_FREQ = 1000  # Hz (MX1515H supports up to 20kHz)
@@ -23,10 +23,11 @@ MOTOR_PWM_FREQ = 1000  # Hz (MX1515H supports up to 20kHz)
 # Hall Encoders (TT Motor, PH2.0-6PIN)
 #   Wiring: V→3V3, G→GND, H1→Ch_A, H2→Ch_B
 # ──────────────────────────────────────────────
-ENC_LEFT_A  = 6    # GP6  — Left Hall H1 (Channel A)
-ENC_LEFT_B  = 7    # GP7  — Left Hall H2 (Channel B)
-ENC_RIGHT_A = 26   # GP26 — Right Hall H1 (Channel A)
-ENC_RIGHT_B = 27   # GP27 — Right Hall H2 (Channel B)
+ENC_LEFT_A  = 16   # GP16 — Left Hall H1 (Grove 4, Channel A)
+ENC_LEFT_B  = 17   # GP17 — Left Hall H2 (Grove 4, Channel B)
+ENC_RIGHT_A = 4    # GP4  — Right Hall H1 (Grove 3, Channel A)
+ENC_RIGHT_B = 5    # GP5  — Right Hall H2 (Grove 3, Channel B)
+ENC_RIGHT_INVERT = True   # Right encoder sign is inverted vs motor direction
 
 # ──────────────────────────────────────────────
 # Encoder Constants
