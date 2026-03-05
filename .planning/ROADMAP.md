@@ -121,7 +121,10 @@ Plans:
   1. Plan 01-04 SUMMARY frontmatter correctly lists FW-07 in requirements-completed
   2. sensor_task.py and main.py share a single I2C(0) instance — no duplicate bus initialization
   3. gate8_wifi_telemetry.py does not reference removed config constants
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 08-01-PLAN.md — FW-07 tracking fix, shared I2C injection, gate8 import repair
 
 ## Progress
 
@@ -139,4 +142,4 @@ Note: Phases 3 and 4 both depend on Phase 2 and can execute in parallel.
 | 5. WebSocket + Real-Time Execution | 0/TBD | Not started | - |
 | 6. Lesson System + Curriculum | 0/TBD | Not started | - |
 | 7. Product Quality + Packaging | 0/TBD | Not started | - |
-| 8. Phase 1-2 Audit Fixes | 0/TBD | Not started | - |
+| 8. Phase 1-2 Audit Fixes | 0/1 | Not started | - |
