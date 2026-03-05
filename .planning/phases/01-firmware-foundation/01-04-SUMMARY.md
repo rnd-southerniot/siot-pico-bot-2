@@ -41,7 +41,7 @@ patterns-established:
   - "Safety injection: main.py creates WatchdogKeeper, injects into motor_task via setter — not constructor"
   - "Emergency stop pattern: brake motors first, then disarm timeout, then log"
 
-requirements-completed: [FW-05, FW-06]
+requirements-completed: [FW-07]
 
 duration: 4min
 completed: 2026-03-03
