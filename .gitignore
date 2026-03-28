@@ -16,3 +16,6 @@ Thumbs.db
 
 # Thonny
 .thonny/
+
+.venv/
+docs/_build/
