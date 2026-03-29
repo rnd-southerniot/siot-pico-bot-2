@@ -46,6 +46,7 @@ def boot():
     heading_tracker = HeadingTracker(imu_hal)
     sensor_task.set_heading_tracker(heading_tracker)
     sensor_task.set_i2c(imu._i2c)  # share I2C bus — avoids dual I2C(0)
+    sensor_task.initialize_sensors()
     print("HeadingTracker and shared I2C wired into sensor_task")
 
     # ── Step 4: Start WDT AFTER calibration via WatchdogKeeper ────────────────

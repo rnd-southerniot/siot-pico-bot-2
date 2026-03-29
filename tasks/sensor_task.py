@@ -45,19 +45,11 @@ _sensor_state = {
 }
 
 # ── Module-level sensor instances ─────────────────────────────────────────────
-# Instantiated once here; sensor_poll_loop() uses these throughout its lifetime.
-# If a sensor is not physically connected, the driver will either return -1.0
-# (ultrasonic timeout) or zeros — the loop will continue safely.
-
-_ir_sensor = IRLineSensor(config.IR_PINS)
-_us_sensor = UltrasonicSensor(config.ULTRASONIC_TRIG, config.ULTRASONIC_ECHO)
-
-# Color sensor: use analog pin if configured, otherwise I2C TCS34725
-if config.COLOR_ANALOG_PIN is not None:
-    _color_sensor = ColorSensor(analog_pin=config.COLOR_ANALOG_PIN)
-else:
-    # I2C mode: ColorSensor initialized in set_i2c() — called from main.py
-    _color_sensor = None
+# Instantiated explicitly during boot; sensor_poll_loop() uses these throughout
+# its lifetime after initialize_sensors() or the loop-local lazy safety path.
+_ir_sensor = None
+_us_sensor = None
+_color_sensor = None
 
 # HeadingTracker is managed externally (main.py passes an IMUHAL to it);
 # sensor_task exposes a setter so main.py can wire them together after boot.
@@ -65,6 +57,31 @@ _heading_tracker = None
 
 # I2C bus shared with IMU — injected from main.py via set_i2c()
 _shared_i2c = None
+
+
+def initialize_sensors():
+    """
+    Explicitly construct sensor drivers after boot wiring is available.
+
+    Idempotent: only creates missing sensor instances.
+    """
+    global _ir_sensor, _us_sensor, _color_sensor
+
+    if _ir_sensor is None:
+        _ir_sensor = IRLineSensor(config.IR_PINS)
+
+    if _us_sensor is None:
+        _us_sensor = UltrasonicSensor(config.ULTRASONIC_TRIG, config.ULTRASONIC_ECHO)
+
+    if config.COLOR_ANALOG_PIN is not None:
+        if _color_sensor is None:
+            _color_sensor = ColorSensor(analog_pin=config.COLOR_ANALOG_PIN)
+    elif _shared_i2c is not None and _color_sensor is None:
+        _color_sensor = ColorSensor(i2c=_shared_i2c)
+
+
+def _ensure_initialized():
+    initialize_sensors()
 
 
 def set_i2c(i2c):
@@ -77,7 +94,8 @@ def set_i2c(i2c):
     """
     global _shared_i2c, _color_sensor
     _shared_i2c = i2c
-    _color_sensor = ColorSensor(i2c=_shared_i2c)
+    if config.COLOR_ANALOG_PIN is None and _color_sensor is None:
+        _color_sensor = ColorSensor(i2c=_shared_i2c)
 
 
 def set_heading_tracker(tracker: HeadingTracker):
@@ -113,6 +131,7 @@ async def sensor_poll_loop():
     the loop continues — a failed sensor returns stale values until it recovers.
     """
     iteration = 0
+    _ensure_initialized()
 
     while True:
         try:
