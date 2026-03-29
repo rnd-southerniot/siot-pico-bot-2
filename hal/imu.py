@@ -69,6 +69,9 @@ class IMUHAL:
         """Return (gx, gy, gz) in degrees per second."""
         return self._imu.gyro()
 
+    def shared_i2c(self):
+        return self._imu._i2c
+
 
 class HeadingTracker:
     """
