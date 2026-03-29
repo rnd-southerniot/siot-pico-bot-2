@@ -21,20 +21,18 @@ import config
 
 # ── Module-level hardware instances ──────────────────────────────────────────
 # MotorHAL wraps lib/motor.py with normalised -1.0..1.0 interface and 70% speed cap.
-_left_motor  = MotorHAL(config.MOTOR_LEFT_A,  config.MOTOR_LEFT_B)
-_right_motor = MotorHAL(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
+_left_motor = None
+_right_motor = None
 
 # PIO quadrature encoders — PIO block 1 (SM IDs 4 & 5) to avoid NeoPixel conflict.
 # Pins must be consecutive: ENC_LEFT_A/B = GP6/GP7, ENC_RIGHT_A/B = GP26/GP27.
 # SM IDs 4/5 = PIO block 1; NeoPixel on PIO block 0 SM 0 (no conflict).
-_left_enc  = EncoderPIO(config.ENC_LEFT_A,  config.ENC_LEFT_B,  sm_id=4,
-                        invert=getattr(config, "ENC_LEFT_INVERT", False))
-_right_enc = EncoderPIO(config.ENC_RIGHT_A, config.ENC_RIGHT_B, sm_id=5,
-                        invert=getattr(config, "ENC_RIGHT_INVERT", False))
+_left_enc = None
+_right_enc = None
 
 # PID controllers — one per wheel
-_left_pid  = PID(config.PID_KP, config.PID_KI, config.PID_KD)
-_right_pid = PID(config.PID_KP, config.PID_KI, config.PID_KD)
+_left_pid = None
+_right_pid = None
 
 # Shared target RPM state — written by external commands, read by PID loop
 _target_rpm = {"left": 0.0, "right": 0.0}
@@ -48,6 +46,56 @@ _watchdog = None
 
 # Tick tracking for actual dt measurement (Pitfall 4: use measured dt, not nominal)
 _last_tick_ms = utime.ticks_ms()
+
+
+def initialize_motors():
+    """
+    Explicitly construct motor hardware and PID controllers after boot wiring.
+
+    Idempotent and all-or-nothing: module globals are only published after all
+    constructors succeed.
+    """
+    global _left_motor, _right_motor, _left_enc, _right_enc
+    global _left_pid, _right_pid, _last_tick_ms
+
+    if (
+        _left_motor is not None
+        and _right_motor is not None
+        and _left_enc is not None
+        and _right_enc is not None
+        and _left_pid is not None
+        and _right_pid is not None
+    ):
+        return
+
+    left_motor = MotorHAL(config.MOTOR_LEFT_A, config.MOTOR_LEFT_B)
+    right_motor = MotorHAL(config.MOTOR_RIGHT_A, config.MOTOR_RIGHT_B)
+    left_enc = EncoderPIO(
+        config.ENC_LEFT_A,
+        config.ENC_LEFT_B,
+        sm_id=4,
+        invert=getattr(config, "ENC_LEFT_INVERT", False),
+    )
+    right_enc = EncoderPIO(
+        config.ENC_RIGHT_A,
+        config.ENC_RIGHT_B,
+        sm_id=5,
+        invert=getattr(config, "ENC_RIGHT_INVERT", False),
+    )
+    left_pid = PID(config.PID_KP, config.PID_KI, config.PID_KD)
+    right_pid = PID(config.PID_KP, config.PID_KI, config.PID_KD)
+
+    _left_motor = left_motor
+    _right_motor = right_motor
+    _left_enc = left_enc
+    _right_enc = right_enc
+    _left_pid = left_pid
+    _right_pid = right_pid
+    _last_tick_ms = utime.ticks_ms()
+
+
+def _ensure_initialized():
+    initialize_motors()
 
 # ── Public accessors ──────────────────────────────────────────────────────────
 
@@ -110,6 +158,7 @@ async def motor_pid_loop():
     """
     global _last_tick_ms
 
+    _ensure_initialized()
     interval_ms = 1000 // config.PID_LOOP_HZ  # 50 ms at 20Hz
     iteration   = 0
     _last_tick_ms = utime.ticks_ms()

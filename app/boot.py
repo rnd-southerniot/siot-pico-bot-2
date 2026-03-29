@@ -56,6 +56,7 @@ def boot():
     from safety.watchdog import WatchdogKeeper
     import tasks.motor_task as motor_task
 
+    motor_task.initialize_motors()
     watchdog = WatchdogKeeper(timeout_ms=8000)
     print("Watchdog armed (8s timeout, fed every 4s in feed_loop coroutine)")
 
