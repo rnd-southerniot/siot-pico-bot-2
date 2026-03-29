@@ -17,20 +17,27 @@ import utime
 import uasyncio
 import config
 
-from robot import RobotAPI
-from safety.sandbox import run_student_code
-
 # ── WiFi/HTTP singletons ─────────────────────────────────────────────────────
 app = None
 _robot = None
 _routes_registered = False
+run_student_code = None
 
 
 def initialize_wifi_api():
-    global app, _robot
+    global app, _robot, run_student_code
     if _robot is None:
+        from robot import RobotAPI
+
         robot = RobotAPI()
-        _robot = robot
+    else:
+        robot = _robot
+
+    if run_student_code is None:
+        from safety.sandbox import run_student_code as sandbox_runner
+    else:
+        sandbox_runner = run_student_code
+
     if app is None:
         from microdot import Microdot
         from microdot.cors import CORS
@@ -38,7 +45,12 @@ def initialize_wifi_api():
         server = Microdot()
         CORS(server, allowed_origins='*')
         _register_routes(server)
-        app = server
+    else:
+        server = app
+
+    _robot = robot
+    run_student_code = sandbox_runner
+    app = server
 
 
 def _ensure_initialized():
