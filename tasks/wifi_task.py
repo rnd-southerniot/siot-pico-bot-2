@@ -27,7 +27,18 @@ app = Microdot()
 CORS(app, allowed_origins='*')
 
 # ── Robot API singleton ──────────────────────────────────────────────────────
-_robot = RobotAPI()
+_robot = None
+
+
+def initialize_wifi_api():
+    global _robot
+    if _robot is None:
+        robot = RobotAPI()
+        _robot = robot
+
+
+def _ensure_initialized():
+    initialize_wifi_api()
 
 # ── HTTP Routes ──────────────────────────────────────────────────────────────
 
@@ -64,6 +75,7 @@ def start_ap():
 
     IMPORTANT RP2040 gotcha: ap.config(ssid=...) MUST be called BEFORE ap.active(True).
     """
+    _ensure_initialized()
     ap = network.WLAN(network.AP_IF)
     mac = ap.config('mac')
     suffix = ubinascii.hexlify(mac[-2:]).decode().upper()
@@ -94,6 +106,7 @@ async def wifi_server_task():
     Exception handling: wrap in try/except to prevent gather() cascade.
     On server crash, log error — WDT will reset if nothing recovers.
     """
+    _ensure_initialized()
     try:
         print("Starting HTTP server on 0.0.0.0:{}".format(config.HTTP_PORT))
         await app.start_server(host='0.0.0.0', port=config.HTTP_PORT, debug=False)

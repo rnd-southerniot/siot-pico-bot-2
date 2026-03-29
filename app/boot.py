@@ -81,9 +81,10 @@ def boot():
     # AP startup can take 1-2s. Done here (sync) to avoid blocking the event loop.
     # WDT is already armed but has 8s timeout — 10s AP deadline will trip WDT first
     # only if AP truly hangs, which is acceptable (device resets and retries on boot).
-    from tasks.wifi_task import start_ap
+    import tasks.wifi_task as wifi_task
 
-    ap, ssid = start_ap()
+    wifi_task.initialize_wifi_api()
+    ap, ssid = wifi_task.start_ap()
     return RuntimeContext(
         heading_tracker=heading_tracker,
         watchdog=watchdog,
