@@ -17,24 +17,28 @@ import utime
 import uasyncio
 import config
 
-from microdot import Microdot
-from microdot.cors import CORS
 from robot import RobotAPI
 from safety.sandbox import run_student_code
 
-# ── Microdot app + CORS ──────────────────────────────────────────────────────
-app = Microdot()
-CORS(app, allowed_origins='*')
-
-# ── Robot API singleton ──────────────────────────────────────────────────────
+# ── WiFi/HTTP singletons ─────────────────────────────────────────────────────
+app = None
 _robot = None
+_routes_registered = False
 
 
 def initialize_wifi_api():
-    global _robot
+    global app, _robot
     if _robot is None:
         robot = RobotAPI()
         _robot = robot
+    if app is None:
+        from microdot import Microdot
+        from microdot.cors import CORS
+
+        server = Microdot()
+        CORS(server, allowed_origins='*')
+        _register_routes(server)
+        app = server
 
 
 def _ensure_initialized():
@@ -42,12 +46,10 @@ def _ensure_initialized():
 
 # ── HTTP Routes ──────────────────────────────────────────────────────────────
 
-@app.get('/status')
 async def status(request):
     """Return current robot state as JSON."""
     return _robot.status()
 
-@app.post('/exec')
 async def exec_endpoint(request):
     """
     Execute a robot program.
@@ -60,6 +62,13 @@ async def exec_endpoint(request):
 
     result = run_student_code(body["code"], _robot)
     return result, (200 if result["ok"] else 400)
+
+
+def _register_routes(server):
+    global _routes_registered
+    server.get('/status')(status)
+    server.post('/exec')(exec_endpoint)
+    _routes_registered = True
 
 # ── WiFi AP Startup ──────────────────────────────────────────────────────────
 
