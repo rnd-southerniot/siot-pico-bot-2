@@ -23,8 +23,9 @@ The tracked repo upload flow is:
 
 .. code-block:: bash
 
-   mpremote connect auto mkdir :lib :lib/microdot :hal :tasks :safety :gates
+   mpremote connect auto mkdir :app :lib :lib/microdot :hal :tasks :safety :gates
    mpremote connect auto cp config.py main.py robot.py :/
+   mpremote connect auto cp app/*.py :/app/
    mpremote connect auto cp lib/*.py :/lib/
    mpremote connect auto cp lib/microdot/*.py :/lib/microdot/
    mpremote connect auto cp hal/*.py :/hal/

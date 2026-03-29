@@ -104,15 +104,17 @@ siot-pico-bot-2/
 ### Uploading Code
 ```bash
 # Create directories on Pico
-mpremote connect auto mkdir :lib :lib/microdot :hal :tasks :safety :gates
+mpremote connect auto mkdir :app :lib :lib/microdot :hal :tasks :safety :gates
 
 # Upload all files
 mpremote connect auto cp config.py main.py robot.py :/
+mpremote connect auto cp app/*.py :/app/
 mpremote connect auto cp lib/*.py :/lib/
 mpremote connect auto cp lib/microdot/*.py :/lib/microdot/
 mpremote connect auto cp hal/*.py :/hal/
 mpremote connect auto cp tasks/*.py :/tasks/
 mpremote connect auto cp safety/*.py :/safety/
+mpremote connect auto cp gates/*.py :/gates/
 ```
 
 ### Running Gates
