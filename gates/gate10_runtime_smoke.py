@@ -16,11 +16,9 @@ import uasyncio
 
 import config
 from app.boot import boot
-from microdot import Request
-import tasks.wifi_task as wifi_task
 
 
-async def dispatch(method, path, body=None):
+async def dispatch(wifi_task, Request, method, path, body=None):
     headers = {"Host": "127.0.0.1"}
     payload = b""
     if body is not None:
@@ -42,12 +40,14 @@ async def cancel_task(task):
             raise
 
 
-async def main():
+async def main(ctx):
     print("=" * 40)
     print("GATE 10: Runtime Smoke")
     print("=" * 40)
 
-    ctx = boot()
+    import tasks.wifi_task as wifi_task
+    from microdot import Request
+
     watchdog_task = uasyncio.create_task(ctx.watchdog.feed_loop())
     server_task = None
 
@@ -66,7 +66,7 @@ async def main():
         assert wifi_task.app.server is not None, "HTTP server did not start"
         print("PASS: wifi_server_task() started HTTP server")
 
-        status_res = await dispatch("GET", "/status")
+        status_res = await dispatch(wifi_task, Request, "GET", "/status")
         assert status_res.status_code == 200, "GET /status should return 200"
         status_data = json.loads(status_res.body.decode())
         required_keys = (
@@ -82,7 +82,7 @@ async def main():
             assert key in status_data, "Missing /status key: " + key
         print("PASS: GET /status returned required keys")
 
-        exec_res = await dispatch("POST", "/exec", {"code": "robot.stop()"})
+        exec_res = await dispatch(wifi_task, Request, "POST", "/exec", {"code": "robot.stop()"})
         assert exec_res.status_code == 200, "POST /exec should return 200"
         exec_data = json.loads(exec_res.body.decode())
         assert exec_data["ok"] == True, "POST /exec should succeed: " + str(exec_data)
@@ -98,4 +98,5 @@ async def main():
         ctx.ap.active(False)
 
 
-uasyncio.run(main())
+ctx = boot()
+uasyncio.run(main(ctx))
