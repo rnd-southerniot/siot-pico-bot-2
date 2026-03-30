@@ -70,7 +70,7 @@ def boot():
     try:
         from hal.leds import StatusLED
 
-        leds = StatusLED(config.NEOPIXEL_PIN, config.NEOPIXEL_COUNT)
+        leds = StatusLED()
         leds.set_ready()
         print("Status LED: green (ready)")
     except Exception as e:
