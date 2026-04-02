@@ -1,0 +1,25 @@
+name: Deploy Helper Tests
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Compile deploy helper and tests
+        run: python3 -m py_compile tools/deploy_runtime.py tests/test_deploy_runtime.py
+
+      - name: Run host-side unittest suite
+        run: python3 -m unittest discover -s tests -p 'test_*.py'
