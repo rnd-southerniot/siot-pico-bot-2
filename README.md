@@ -102,8 +102,29 @@ siot-pico-bot-2/
 2. Copy MicroPython UF2 to the drive (Pico reboots automatically)
 
 ### Uploading Code
+
+Use `tools/deploy_runtime.py` as the recommended runtime deployment helper. It
+requires `mpremote` to be installed and available on `PATH`. This helper deploys
+the tracked runtime files; it does not flash MicroPython and it does not wipe
+existing files from the board.
+
 ```bash
-# Create directories on Pico
+# Deploy to the only plausible connected MicroPython USB device
+python3 tools/deploy_runtime.py
+
+# Deploy to an explicit serial port
+python3 tools/deploy_runtime.py --port /dev/cu.usbmodem21101
+
+# Deploy, then run only gates/gate10_runtime_smoke.py
+python3 tools/deploy_runtime.py --smoke
+```
+
+If `--port` is omitted, the helper only proceeds when exactly one plausible
+MicroPython USB device is detected.
+
+Manual `mpremote` upload remains available as a fallback/reference:
+
+```bash
 mpremote connect auto mkdir :app :lib :lib/microdot :hal :tasks :safety :gates
 
 # Upload all files

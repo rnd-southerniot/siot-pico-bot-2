@@ -19,7 +19,22 @@ Flash MicroPython
 Upload the firmware files
 -------------------------
 
-The tracked repo upload flow is:
+Use ``tools/deploy_runtime.py`` as the recommended runtime deployment helper. It
+requires ``mpremote`` to be installed and available on ``PATH``. This helper
+deploys the tracked runtime files; it does not flash MicroPython and it does not
+wipe existing files from the board.
+
+.. code-block:: bash
+
+   python3 tools/deploy_runtime.py
+   python3 tools/deploy_runtime.py --port /dev/cu.usbmodem21101
+   python3 tools/deploy_runtime.py --smoke
+
+If ``--port`` is omitted, the helper only proceeds when exactly one plausible
+MicroPython USB device is detected. ``--smoke`` deploys and runs only
+``gates/gate10_runtime_smoke.py`` after deployment.
+
+Manual ``mpremote`` upload remains available as a fallback/reference:
 
 .. code-block:: bash
 
