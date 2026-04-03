@@ -9,6 +9,10 @@ Exports:
   motor_pid_loop()      — coroutine, schedule with uasyncio.gather()
   get_target_rpm(side)  — returns current target RPM for 'left' or 'right'
   set_target_rpm(side, rpm) — sets target RPM
+  set_drive_targets(left, right) — sets both target RPMs together
+  stop_motion()         — clears distance goals and stops both motors
+  submit_distance_goal(distance_cm, rpm, tolerance_cm, timeout_s)
+                        — non-blocking encoder-distance goal submission
   set_watchdog(wdg)     — injects WatchdogKeeper after creation in main.py
 """
 
@@ -39,6 +43,10 @@ _target_rpm = {"left": 0.0, "right": 0.0}
 
 # Measured RPM state — written by PID loop, read by status endpoint
 _actual_rpm = {"left": 0.0, "right": 0.0}
+
+# Internal encoder-distance goal state. This remains private to motor_task so
+# the student-facing API and HTTP status schema do not grow new motion fields.
+_distance_goal = None
 
 # WatchdogKeeper — injected by main.py via set_watchdog() after WDT creation.
 # None until set; check_motor_timeout / emergency_stop are no-ops when None.
@@ -97,6 +105,55 @@ def initialize_motors():
 def _ensure_initialized():
     initialize_motors()
 
+
+def _reset_pid_if_ready():
+    """Reset PID integrators when actively stopping the drivetrain."""
+    if _left_pid is not None:
+        _left_pid.reset()
+    if _right_pid is not None:
+        _right_pid.reset()
+
+
+def _brake_if_ready():
+    """Brake motors immediately when hardware is already initialized."""
+    if _left_motor is not None:
+        _left_motor.brake()
+    if _right_motor is not None:
+        _right_motor.brake()
+
+
+def _update_watchdog_for_targets():
+    """Arm motor timeout when targets are non-zero; disarm when both are zero."""
+    if _watchdog is None:
+        return
+    if _target_rpm["left"] != 0.0 or _target_rpm["right"] != 0.0:
+        _watchdog.arm_motor_timeout()
+    else:
+        _watchdog.disarm_motor_timeout()
+
+
+def _set_target_rpm_raw(side: str, rpm: float):
+    """Update a single target RPM without distance-goal preemption."""
+    _target_rpm[side] = rpm
+    _update_watchdog_for_targets()
+
+
+def _set_drive_targets_raw(left_rpm: float, right_rpm: float):
+    """Update both target RPMs without distance-goal preemption."""
+    _target_rpm["left"] = left_rpm
+    _target_rpm["right"] = right_rpm
+    _update_watchdog_for_targets()
+
+
+def _clear_distance_goal(stop_motors: bool = False):
+    """Drop any active encoder-distance goal and optionally stop immediately."""
+    global _distance_goal
+    _distance_goal = None
+    if stop_motors:
+        _set_drive_targets_raw(0.0, 0.0)
+        _reset_pid_if_ready()
+        _brake_if_ready()
+
 # ── Public accessors ──────────────────────────────────────────────────────────
 
 def get_target_rpm(side: str) -> float:
@@ -115,12 +172,59 @@ def set_target_rpm(side: str, rpm: float):
     Arms the software motor timeout when any wheel has a non-zero target,
     and disarms it when both wheels return to zero.
     """
-    _target_rpm[side] = rpm
-    if _watchdog is not None:
-        if _target_rpm["left"] != 0.0 or _target_rpm["right"] != 0.0:
-            _watchdog.arm_motor_timeout()
-        else:
-            _watchdog.disarm_motor_timeout()
+    _clear_distance_goal()
+    _set_target_rpm_raw(side, rpm)
+
+
+def set_drive_targets(left_rpm: float, right_rpm: float):
+    """Set both wheel targets together and cancel any active distance goal."""
+    _clear_distance_goal()
+    _set_drive_targets_raw(left_rpm, right_rpm)
+
+
+def stop_motion():
+    """Stop both wheels immediately and cancel any active distance goal."""
+    _clear_distance_goal(stop_motors=True)
+
+
+def cancel_distance_goal(stop_motors: bool = False):
+    """Cancel the current distance goal without exposing goal state publicly."""
+    _clear_distance_goal(stop_motors=stop_motors)
+
+
+def submit_distance_goal(distance_cm: float, rpm: float, tolerance_cm: float, timeout_s: float):
+    """
+    Submit a non-blocking encoder-distance goal.
+
+    Positive distance drives forward; negative distance drives backward.
+    The PID loop owns completion/timeout handling and will stop the motors and
+    clear the goal on success or timeout.
+    """
+    global _distance_goal
+
+    if distance_cm == 0:
+        _clear_distance_goal(stop_motors=True)
+        return
+
+    try:
+        _ensure_initialized()
+    except Exception as exc:
+        raise RuntimeError("Encoder distance control unavailable") from exc
+
+    direction = 1.0 if distance_cm > 0 else -1.0
+    ticks_per_cm = 10.0 / config.MM_PER_TICK
+    target_ticks = abs(distance_cm) * ticks_per_cm
+    tolerance_ticks = tolerance_cm * ticks_per_cm
+
+    _distance_goal = {
+        "direction": direction,
+        "left_start_ticks": _left_enc.count(),
+        "right_start_ticks": _right_enc.count(),
+        "target_ticks": target_ticks,
+        "tolerance_ticks": tolerance_ticks,
+        "deadline_ms": utime.ticks_add(utime.ticks_ms(), int(timeout_s * 1000)),
+    }
+    _set_drive_targets_raw(direction * rpm, direction * rpm)
 
 
 def set_watchdog(wdg):
@@ -182,9 +286,34 @@ async def motor_pid_loop():
             _actual_rpm["left"]  = left_rpm_actual
             _actual_rpm["right"] = right_rpm_actual
 
+            force_stop = False
+            if _distance_goal is not None:
+                direction = _distance_goal["direction"]
+                left_progress = direction * (
+                    _left_enc.count() - _distance_goal["left_start_ticks"]
+                )
+                right_progress = direction * (
+                    _right_enc.count() - _distance_goal["right_start_ticks"]
+                )
+                avg_progress = (left_progress + right_progress) / 2.0
+                success_ticks = max(
+                    0.0, _distance_goal["target_ticks"] - _distance_goal["tolerance_ticks"]
+                )
+
+                if avg_progress >= success_ticks:
+                    _clear_distance_goal(stop_motors=True)
+                    force_stop = True
+                elif utime.ticks_diff(_distance_goal["deadline_ms"], now) <= 0:
+                    _clear_distance_goal(stop_motors=True)
+                    force_stop = True
+
             # ── Step 3: Compute PID correction using real encoder feedback ─────
-            left_out  = _left_pid.compute(_target_rpm["left"],  left_rpm_actual,  dt if dt > 0 else 0.05)
-            right_out = _right_pid.compute(_target_rpm["right"], right_rpm_actual, dt if dt > 0 else 0.05)
+            if force_stop:
+                left_out = 0.0
+                right_out = 0.0
+            else:
+                left_out  = _left_pid.compute(_target_rpm["left"],  left_rpm_actual,  dt if dt > 0 else 0.05)
+                right_out = _right_pid.compute(_target_rpm["right"], right_rpm_actual, dt if dt > 0 else 0.05)
 
             # ── Step 4: Drive motors with PID output ──────────────────────────
             _left_motor.drive(left_out)
