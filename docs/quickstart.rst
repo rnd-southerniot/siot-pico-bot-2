@@ -34,6 +34,16 @@ If ``--port`` is omitted, the helper only proceeds when exactly one plausible
 MicroPython USB device is detected. ``--smoke`` deploys and runs only
 ``gates/gate10_runtime_smoke.py`` after deployment.
 
+For current runtime-oriented validation, prefer:
+
+.. code-block:: bash
+
+   python3 tools/deploy_runtime.py --smoke
+
+This deploys and runs only ``gates/gate10_runtime_smoke.py``. It checks the
+current boot, AP, HTTP ``/status``, and ``/exec`` wiring. The other numbered
+gates remain manual on-device bring-up checks.
+
 Manual ``mpremote`` upload remains available as a fallback/reference:
 
 .. code-block:: bash

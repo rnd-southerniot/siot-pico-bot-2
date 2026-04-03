@@ -1,9 +1,12 @@
 """
 run_all.py — Sequential gate runner for v2 async firmware
 
-Executes all gate verification scripts in order. Run with:
+Executes an older/manual subset of gate verification scripts in order. Run with:
 
   mpremote run gates/run_all.py
+
+This runner does not cover every gate in ``gates/`` and does not include the
+current runtime smoke path in ``gates/gate10_runtime_smoke.py``.
 
 Each gate is exec()'d in a try/except. A gate PASSES if it runs without
 raising an exception AND its output contains the string 'PASS'.

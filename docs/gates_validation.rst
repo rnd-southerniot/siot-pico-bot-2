@@ -7,12 +7,11 @@ What gates are in this repo
 The ``gates/`` directory contains on-device verification scripts for the robot.
 These are hardware-backed checks, not host-side unit tests.
 
-The tracked repository currently shows two visible groups of gates:
+The tracked repository currently has two practical validation paths:
 
-- early hardware bring-up and milestone gates such as board, peripherals,
-  motors, encoders, IMU, heading, Wi-Fi telemetry, and autonomous motion
-- async/runtime-oriented gates such as async scheduling, motor distance,
-  watchdog behavior, sensor polling, PIO encoder validation, and exec sandboxing
+- older/manual bring-up and milestone gates for board, peripherals, motors,
+  encoders, IMU, heading, Wi-Fi telemetry, and autonomous motion
+- the current runtime smoke path in ``gates/gate10_runtime_smoke.py``
 
 How to use them
 ---------------
@@ -20,6 +19,16 @@ How to use them
 Gates are intended to be run on the Pico, usually through ``mpremote``.
 Because the production ``main.py`` auto-boots the runtime, some gate workflows
 may require temporarily preventing the normal boot path before running a gate.
+
+For the current runtime-oriented smoke check, use:
+
+.. code-block:: bash
+
+   python3 tools/deploy_runtime.py --smoke
+
+This deploys and runs only ``gates/gate10_runtime_smoke.py``. It validates the
+current boot, AP, HTTP ``/status``, and ``/exec`` wiring. It does not prove
+external Wi-Fi client reachability.
 
 What they validate
 ------------------

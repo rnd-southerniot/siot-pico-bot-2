@@ -140,6 +140,10 @@ mpremote connect auto cp gates/*.py :/gates/
 
 ### Running Gates
 ```bash
+# Current runtime-oriented smoke path
+python3 tools/deploy_runtime.py --smoke
+
+# Manual on-device gate path
 # Run individual gate tests (rename main.py first to prevent auto-boot)
 mpremote connect auto exec "import os; os.rename('main.py', '_main.py')"
 mpremote connect auto run gates/gate0_env_check.py
@@ -147,6 +151,11 @@ mpremote connect auto run gates/gate0_env_check.py
 # Restore main.py when done testing
 mpremote connect auto exec "import os; os.rename('_main.py', 'main.py')"
 ```
+
+`python3 tools/deploy_runtime.py --smoke` deploys and runs only
+`gates/gate10_runtime_smoke.py`. It checks the current boot/AP/HTTP runtime
+wiring, including `/status` and `/exec`. The other numbered gates remain useful
+manual on-device checks.
 
 ### Test Dashboard
 Open `tools/test-dashboard.html` in a browser, connect to the RoboPico WiFi AP, and click Connect.
