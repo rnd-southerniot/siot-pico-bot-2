@@ -13,6 +13,8 @@ Exports:
   stop_motion()         — clears distance goals and stops both motors
   submit_distance_goal(distance_cm, rpm, tolerance_cm, timeout_s)
                         — non-blocking encoder-distance goal submission
+  submit_turn_goal(angle_deg, rpm, tolerance_deg, timeout_s)
+                        — non-blocking heading-turn goal submission
   set_watchdog(wdg)     — injects WatchdogKeeper after creation in main.py
 """
 
@@ -47,6 +49,7 @@ _actual_rpm = {"left": 0.0, "right": 0.0}
 # Internal encoder-distance goal state. This remains private to motor_task so
 # the student-facing API and HTTP status schema do not grow new motion fields.
 _distance_goal = None
+_turn_goal = None
 
 # WatchdogKeeper — injected by main.py via set_watchdog() after WDT creation.
 # None until set; check_motor_timeout / emergency_stop are no-ops when None.
@@ -145,14 +148,36 @@ def _set_drive_targets_raw(left_rpm: float, right_rpm: float):
     _update_watchdog_for_targets()
 
 
-def _clear_distance_goal(stop_motors: bool = False):
-    """Drop any active encoder-distance goal and optionally stop immediately."""
-    global _distance_goal
-    _distance_goal = None
+def _clear_motion_goals(stop_motors: bool = False, clear_distance: bool = True, clear_turn: bool = True):
+    """Drop active motion goals and optionally stop immediately."""
+    global _distance_goal, _turn_goal
+    if clear_distance:
+        _distance_goal = None
+    if clear_turn:
+        _turn_goal = None
     if stop_motors:
         _set_drive_targets_raw(0.0, 0.0)
         _reset_pid_if_ready()
         _brake_if_ready()
+
+
+def _read_heading_snapshot(require_numeric: bool = False):
+    """
+    Read the current heading from sensor_task without a top-level import.
+
+    Returns the numeric heading when available. If require_numeric is False and
+    heading is unavailable/non-numeric, returns None so the caller can defer to
+    timeout handling.
+    """
+    import tasks.sensor_task as sensor_task
+
+    state = sensor_task.get_sensor_state()
+    heading = state.get("heading")
+    if isinstance(heading, bool) or not isinstance(heading, (int, float)):
+        if require_numeric:
+            raise RuntimeError("Heading unavailable for turn control")
+        return None
+    return float(heading)
 
 # ── Public accessors ──────────────────────────────────────────────────────────
 
@@ -172,24 +197,29 @@ def set_target_rpm(side: str, rpm: float):
     Arms the software motor timeout when any wheel has a non-zero target,
     and disarms it when both wheels return to zero.
     """
-    _clear_distance_goal()
+    _clear_motion_goals()
     _set_target_rpm_raw(side, rpm)
 
 
 def set_drive_targets(left_rpm: float, right_rpm: float):
     """Set both wheel targets together and cancel any active distance goal."""
-    _clear_distance_goal()
+    _clear_motion_goals()
     _set_drive_targets_raw(left_rpm, right_rpm)
 
 
 def stop_motion():
     """Stop both wheels immediately and cancel any active distance goal."""
-    _clear_distance_goal(stop_motors=True)
+    _clear_motion_goals(stop_motors=True)
 
 
 def cancel_distance_goal(stop_motors: bool = False):
     """Cancel the current distance goal without exposing goal state publicly."""
-    _clear_distance_goal(stop_motors=stop_motors)
+    _clear_motion_goals(stop_motors=stop_motors, clear_turn=False)
+
+
+def cancel_turn_goal(stop_motors: bool = False):
+    """Cancel the current turn goal without exposing goal state publicly."""
+    _clear_motion_goals(stop_motors=stop_motors, clear_distance=False)
 
 
 def submit_distance_goal(distance_cm: float, rpm: float, tolerance_cm: float, timeout_s: float):
@@ -203,7 +233,7 @@ def submit_distance_goal(distance_cm: float, rpm: float, tolerance_cm: float, ti
     global _distance_goal
 
     if distance_cm == 0:
-        _clear_distance_goal(stop_motors=True)
+        _clear_motion_goals(stop_motors=True)
         return
 
     try:
@@ -211,6 +241,7 @@ def submit_distance_goal(distance_cm: float, rpm: float, tolerance_cm: float, ti
     except Exception as exc:
         raise RuntimeError("Encoder distance control unavailable") from exc
 
+    _clear_motion_goals()
     direction = 1.0 if distance_cm > 0 else -1.0
     ticks_per_cm = 10.0 / config.MM_PER_TICK
     target_ticks = abs(distance_cm) * ticks_per_cm
@@ -225,6 +256,34 @@ def submit_distance_goal(distance_cm: float, rpm: float, tolerance_cm: float, ti
         "deadline_ms": utime.ticks_add(utime.ticks_ms(), int(timeout_s * 1000)),
     }
     _set_drive_targets_raw(direction * rpm, direction * rpm)
+
+
+def submit_turn_goal(angle_deg: float, rpm: float, tolerance_deg: float, timeout_s: float):
+    """
+    Submit a non-blocking heading-turn goal.
+
+    Positive angle turns clockwise/right; negative angle turns counterclockwise/left.
+    The PID loop owns completion/timeout handling and will stop the motors and
+    clear the goal on success or timeout.
+    """
+    global _turn_goal
+
+    if angle_deg == 0:
+        _clear_motion_goals(stop_motors=True)
+        return
+
+    start_heading = _read_heading_snapshot(require_numeric=True)
+    _clear_motion_goals()
+
+    direction = 1.0 if angle_deg > 0 else -1.0
+    _turn_goal = {
+        "direction": direction,
+        "start_heading": start_heading,
+        "target_degrees": abs(angle_deg),
+        "tolerance_deg": tolerance_deg,
+        "deadline_ms": utime.ticks_add(utime.ticks_ms(), int(timeout_s * 1000)),
+    }
+    _set_drive_targets_raw(direction * rpm, -direction * rpm)
 
 
 def set_watchdog(wdg):
@@ -301,10 +360,25 @@ async def motor_pid_loop():
                 )
 
                 if avg_progress >= success_ticks:
-                    _clear_distance_goal(stop_motors=True)
+                    _clear_motion_goals(stop_motors=True)
                     force_stop = True
                 elif utime.ticks_diff(_distance_goal["deadline_ms"], now) <= 0:
-                    _clear_distance_goal(stop_motors=True)
+                    _clear_motion_goals(stop_motors=True)
+                    force_stop = True
+            elif _turn_goal is not None:
+                current_heading = _read_heading_snapshot(require_numeric=False)
+                if current_heading is not None:
+                    direction = _turn_goal["direction"]
+                    progress_deg = direction * (current_heading - _turn_goal["start_heading"])
+                    success_deg = max(
+                        0.0, _turn_goal["target_degrees"] - _turn_goal["tolerance_deg"]
+                    )
+                    if progress_deg >= success_deg:
+                        _clear_motion_goals(stop_motors=True)
+                        force_stop = True
+
+                if not force_stop and utime.ticks_diff(_turn_goal["deadline_ms"], now) <= 0:
+                    _clear_motion_goals(stop_motors=True)
                     force_stop = True
 
             # ── Step 3: Compute PID correction using real encoder feedback ─────

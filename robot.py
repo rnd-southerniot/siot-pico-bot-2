@@ -27,6 +27,25 @@ class RobotAPI:
         """Pivot right: left wheel forward, right wheel backward."""
         _motor_task.set_drive_targets(rpm, -rpm)
 
+    def turn_degrees(self, angle_deg, rpm=30.0, tolerance_deg=3.0, timeout_s=5.0):
+        """
+        Submit a non-blocking relative heading turn goal.
+
+        Positive angle turns clockwise/right, negative angle turns
+        counterclockwise/left. This method returns immediately; the async motor
+        PID loop owns goal completion, timeout handling, and stop-on-exit behavior.
+        """
+        if rpm <= 0:
+            raise ValueError("rpm must be > 0")
+        if tolerance_deg <= 0:
+            raise ValueError("tolerance_deg must be > 0")
+        if timeout_s <= 0:
+            raise ValueError("timeout_s must be > 0")
+        if angle_deg == 0:
+            self.stop()
+            return
+        _motor_task.submit_turn_goal(angle_deg, rpm, tolerance_deg, timeout_s)
+
     def drive_distance_cm(self, distance_cm, rpm=40.0, tolerance_cm=1.0, timeout_s=5.0):
         """
         Submit a non-blocking encoder-distance goal.
